@@ -1,0 +1,33 @@
+dependencies:
+  flutter:
+    sdk: flutter
+  intro_slider: ^4.2.1
+  firebase_core: ^3.11.0
+  firebase_auth: ^5.4.0
+  cloud_firestore: ^5.6.3
+  firebase_messaging: ^15.2.0
+  firebase_storage: ^12.3.0
+  flutter_colorpicker: ^1.1.0
+  flutter_otp_text_field: ^1.1.1
+  line_awesome_flutter: ^3.0.1
+  cupertino_icons: ^1.0.8
+  flutter_native_splash: ^2.4.5
+
+
+
+flutter_native_splash:
+  color: "#ffffff"
+  image: assets/image/TRACE NOXUS.png
+  branding: assets/image/TRACE NOXUS.png
+  branding_bottom_padding: 24
+  color_dark: "#121212"
+  image_dark: assets/image/TRACE NOXUS.png
+  branding_dark: assets/image/TRACE NOXUS.png
+
+  android_12:
+    image: assets/image/TRACE NOXUS.pngg
+    icon_background_color: "#ffffff"
+    image_dark: assets/image/TRACE NOXUS.png
+    icon_background_color_dark: "#121212"
+
+  web: false
