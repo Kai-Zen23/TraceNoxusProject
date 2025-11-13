@@ -107,11 +107,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Image.asset(
                     'assets/Image/TraceNoxus LOGO.png',
-                    height: 250,
+                    height: 160,
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
-                        height: 180,
+                        height: 120,
                         decoration: BoxDecoration(
                           color: Colors.grey[800],
                           border: Border.all(
@@ -124,40 +124,60 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Icon(
                             Icons.image_outlined,
                             color: Color(0xFF88AEC9),
-                            size: 48,
+                            size: 36,
                           ),
                         ),
                       );
                     },
                   ),
                 ),
-                const SizedBox(height: 5),
+                const SizedBox(height: 12),
                 Image.asset(
                   'assets/Image/VG VOUCHER DRAFT.png',
-                  height: 200,
+                  height: 140,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) {
                     return const Text(
                       'Ascend the trail',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 28,
+                        fontSize: 22,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 1.0,
                       ),
                     );
                   },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
                 // Card
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 0),
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(32),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0xFFFFFFFF),
+                          Color.fromARGB(255, 149, 186, 216),
+                          Color(0xFF7CAED7),
+                        ],
+                        stops: [0.0, 0.55, 1.0],
+                      ),
+                      image: DecorationImage(
+                        image: const AssetImage('assets/Image/Girl.png'),
+                        fit: BoxFit.cover,
+                        alignment: Alignment.centerRight,
+                        colorFilter: ColorFilter.mode(
+                          Colors.white.withOpacity(0.15),
+                          BlendMode.srcATop,
+                        ),
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        topRight: Radius.circular(130),
+                      ),
                     ),
                     child: Consumer<AuthProvider>(
                       builder: (context, authProvider, _) {
@@ -170,7 +190,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               const Text(
-                                'WELCOME BACK !',
+                                'Welcome back!',
                                 textAlign: TextAlign.left,
                                 style: TextStyle(
                                   color: Color(0xFF233A66),
@@ -194,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 keyboardType: TextInputType.emailAddress,
                                 validator: _validateEmail,
                                 decoration: const InputDecoration(
-                                  hintText: 'Placeholder',
+                                  hintText: 'Enter your email',
                                   enabledBorder: UnderlineInputBorder(
                                     borderSide: BorderSide(color: Color(0xFF88AEC9), width: 2),
                                   ),
@@ -220,7 +240,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 validator: (value) =>
                                     value?.isEmpty ?? true ? 'Please enter your password' : null,
                                 decoration: const InputDecoration(
-                                  hintText: 'Placeholder',
+                                  hintText: 'Password',
                                   enabledBorder: UnderlineInputBorder(
                                     borderSide: BorderSide(color: Color(0xFF88AEC9), width: 2),
                                   ),
@@ -230,23 +250,47 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 style: const TextStyle(fontSize: 16),
                               ),
-                              const SizedBox(height: 28),
+                              const SizedBox(height: 10),
                               // Primary sign-in button
-                              ElevatedButton(
-                                onPressed: _login,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF233A66),
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(40),
+                              SizedBox(
+                                width: 220,
+                                child: ElevatedButton(
+                                  onPressed: _login,
+                                  style: ElevatedButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    elevation: 0,
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(32),
+                                    ),
                                   ),
-                                  textStyle: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20,
+                                  child: Ink(
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFF6DA7CE),
+                                          Color(0xFF375468),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      borderRadius: BorderRadius.circular(32),
+                                    ),
+                                    child: Container(
+                                      alignment: Alignment.center,
+                                      padding: const EdgeInsets.symmetric(vertical: 14),
+                                      child: const Text(
+                                        'SIGN IN',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
-                                child: const Text('SIGN IN'),
                               ),
                               const SizedBox(height: 12),
                               // Secondary actions
