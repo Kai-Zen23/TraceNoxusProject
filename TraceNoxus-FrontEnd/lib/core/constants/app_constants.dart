@@ -1,5 +1,5 @@
 class AppConstants {
-  static const String baseUrl = 'http://192.168.100.108:8000/' ; //http://192.168.1.3:8000
+  static const String baseUrl = 'https://tracenoxus.onrender.com' ;//http://192.168.1.3:8000
   
   // Routes
   static const String loginRoute = '/login';
