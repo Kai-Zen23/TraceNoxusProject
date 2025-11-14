@@ -8,17 +8,73 @@ import 'register_screen.dart';
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
+  PageRouteBuilder<T> _createRoute<T extends Widget>(T page) {
+    return PageRouteBuilder<T>(
+      pageBuilder: (context, animation, secondaryAnimation) => page,
+      transitionDuration: const Duration(milliseconds: 600),
+      reverseTransitionDuration: const Duration(milliseconds: 450),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        // Use a single smooth curve for all animations to prevent shaking
+        final curvedAnimation = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+        );
+
+        // Fade transition for smooth appearance
+        final fadeAnimation = Tween<double>(
+          begin: 0.0,
+          end: 1.0,
+        ).animate(
+          CurvedAnimation(
+            parent: animation,
+            curve: const Interval(0.0, 1.0, curve: Curves.easeInOut),
+          ),
+        );
+
+        // Slide up transition - makes the card appear to move up from bottom
+        final slideUpAnimation = Tween<Offset>(
+          begin: const Offset(0.0, 0.25), // Start from below (25% down) - more visible
+          end: Offset.zero,
+        ).animate(curvedAnimation);
+
+        // Subtle scale animation using Transform to avoid layout shifts
+        final scaleAnimation = Tween<double>(
+          begin: 0.96,
+          end: 1.0,
+        ).animate(curvedAnimation);
+
+        return SlideTransition(
+          position: slideUpAnimation,
+          child: FadeTransition(
+            opacity: fadeAnimation,
+            child: AnimatedBuilder(
+              animation: scaleAnimation,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: scaleAnimation.value,
+                  alignment: Alignment.bottomCenter, // Scale from bottom to enhance upward movement
+                  child: child,
+                );
+              },
+              child: child,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _goToLogin(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      _createRoute(const LoginScreen()),
     );
   }
 
   void _goToRegister(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const RegisterScreen()),
+      _createRoute(const RegisterScreen()),
     );
   }
 
@@ -56,7 +112,7 @@ class WelcomeScreen extends StatelessWidget {
                         children: [
                           SizedBox(height: spec.topSpacing),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 50),
+                            padding: const EdgeInsets.symmetric(horizontal: 30),
                             child: Image.asset(
                               'assets/Image/TraceNoxus LOGO.png',
                               height: spec.logoHeight,
@@ -68,11 +124,11 @@ class WelcomeScreen extends StatelessWidget {
                                   border: Border.all(color: const Color(0xFF88AEC9), width: 2),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: const Center(
+                                child: Center(
                                   child: Icon(
                                     Icons.image_outlined,
-                                    color: Color(0xFF88AEC9),
-                                    size: 40,
+                                    color: const Color(0xFF88AEC9),
+                                    size: spec.logoIconSize,
                                   ),
                                 ),
                               ),
@@ -236,6 +292,7 @@ class _WelcomeSpec {
   final double topSpacing;
   final double logoHeight;
   final double logoFallbackHeight;
+  final double logoIconSize;
   final double brandSpacing;
   final double heroSpacing;
   final double voucherHeight;
@@ -256,6 +313,7 @@ class _WelcomeSpec {
     required this.topSpacing,
     required this.logoHeight,
     required this.logoFallbackHeight,
+    required this.logoIconSize,
     required this.brandSpacing,
     required this.heroSpacing,
     required this.voucherHeight,
@@ -279,13 +337,14 @@ class _WelcomeSpec {
 
     double clamp(double value, double min, double max) => math.min(math.max(value, min), max);
 
-    final topSpacing = clamp(width * 0.18, 80, 140);
-    final logoHeight = clamp(width * 0.25, 120, 200);
+    final topSpacing = clamp(width * 0.18, 160, 300);
+    final logoHeight = clamp(width * 0.25, 170, 300);
     final logoFallbackHeight = clamp(logoHeight * 0.72, 90, 150);
-    final brandSpacing = clamp(width * 0.03, 10, 24);
-    final heroSpacing = clamp(width * 0.06, 24, 48);
-    final voucherHeight = clamp(width * 0.2, 90, 160);
-    final voucherFallbackFontSize = clamp(voucherHeight * 0.16, 18, 24);
+    final logoIconSize = clamp(logoHeight * 0.22, 28, 44);
+    final brandSpacing = clamp(width * 0.03, 10, 20);
+    final heroSpacing = clamp(width * 0.08, 48, 80);
+    final voucherHeight = clamp(width * 0.22, 100, 180);
+    final voucherFallbackFontSize = clamp(voucherHeight * 0.16, 18, 26);
 
     final cardOuterPadding = isDesktop ? 120.0 : isTablet ? 48.0 : 0.0;
     final cardMaxWidth = isDesktop
@@ -308,6 +367,7 @@ class _WelcomeSpec {
       topSpacing: topSpacing,
       logoHeight: logoHeight,
       logoFallbackHeight: logoFallbackHeight,
+      logoIconSize: logoIconSize,
       brandSpacing: brandSpacing,
       heroSpacing: heroSpacing,
       voucherHeight: voucherHeight,
