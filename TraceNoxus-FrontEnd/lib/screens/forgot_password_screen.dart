@@ -42,7 +42,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         fit: StackFit.expand,
         children: [
           Image.asset(
-            'assets/image/background.png',
+            'assets/Image/BackGroundIm(2).png',
             fit: BoxFit.cover,
           ),
           Center(
@@ -104,6 +104,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   if (value == null || value.isEmpty) {
                                     return 'Please enter your email';
                                   }
+
                                   if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
                                     return 'Please enter a valid email';
                                   }

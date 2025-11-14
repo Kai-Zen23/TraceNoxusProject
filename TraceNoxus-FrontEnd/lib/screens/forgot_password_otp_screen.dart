@@ -56,7 +56,7 @@ class _ForgotPasswordOtpScreenState extends State<ForgotPasswordOtpScreen> {
         fit: StackFit.expand,
         children: [
           Image.asset(
-            'assets/image/background.png',
+            'assets/Image/BackGroundIm(2).png',
             fit: BoxFit.cover,
           ),
           Center(
