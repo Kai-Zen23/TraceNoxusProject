@@ -71,8 +71,8 @@ class _ResponsiveSpec {
     final logoFallbackHeight = _clampDouble(logoHeight * 0.72, 90, 150);
     final logoIconSize = _clampDouble(logoHeight * 0.22, 28, 44);
     final brandSpacing = _clampDouble(width * 0.03, 10, 20);
-    final heroSpacing = _clampDouble(width * 0.08, 48, 80);
-    final voucherHeight = _clampDouble(width * 0.22, 100, 180);
+    final heroSpacing = _clampDouble(width * 0.08, 10, 20);
+    final voucherHeight = _clampDouble(width * 0.22, 150, 180);
     final voucherFallbackFontSize = _clampDouble(voucherHeight * 0.16, 18, 26);
 
     final cardOuterPadding = isDesktop ? 80.0 : isTablet ? 32.0 : 0.0;
@@ -178,12 +178,66 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  PageRouteBuilder<T> _createUpwardRoute<T extends Widget>(T page) {
+    return PageRouteBuilder<T>(
+      pageBuilder: (context, animation, secondaryAnimation) => page,
+      transitionDuration: const Duration(milliseconds: 600),
+      reverseTransitionDuration: const Duration(milliseconds: 450),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        // Use a single smooth curve for all animations to prevent shaking
+        final curvedAnimation = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+        );
+
+        // Fade transition for smooth appearance
+        final fadeAnimation = Tween<double>(
+          begin: 0.0,
+          end: 1.0,
+        ).animate(
+          CurvedAnimation(
+            parent: animation,
+            curve: const Interval(0.0, 1.0, curve: Curves.easeInOut),
+          ),
+        );
+
+        // Slide up transition - makes the card appear to move up from bottom
+        final slideUpAnimation = Tween<Offset>(
+          begin: const Offset(0.0, 0.25), // Start from below (25% down)
+          end: Offset.zero,
+        ).animate(curvedAnimation);
+
+        // Subtle scale animation using Transform to avoid layout shifts
+        final scaleAnimation = Tween<double>(
+          begin: 0.96,
+          end: 1.0,
+        ).animate(curvedAnimation);
+
+        return SlideTransition(
+          position: slideUpAnimation,
+          child: FadeTransition(
+            opacity: fadeAnimation,
+            child: AnimatedBuilder(
+              animation: scaleAnimation,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: scaleAnimation.value,
+                  alignment: Alignment.bottomCenter, // Scale from bottom to enhance upward movement
+                  child: child,
+                );
+              },
+              child: child,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _createAccount() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const RegisterScreen(),
-      ),
+      _createUpwardRoute(const RegisterScreen()),
     );
   }
 
@@ -247,7 +301,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   child: Center(
                                     child: Icon(
                                       Icons.image_outlined,
-                                      color: Color(0xFF88AEC9),
+                                      color: const Color(0xFF88AEC9),
                                       size: spec.logoIconSize,
                                     ),
                                   ),

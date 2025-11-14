@@ -55,9 +55,11 @@ dev_dependencies:
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/images/TRACE NOXUS.png"
-  adaptive_icon_background: "#ffffff"
-  adaptive_icon_foreground: "assets/images/TRACE NOXUS.png"
+  image_path: "assets/Image/TraceNoxus LOGO.png"
+  adaptive_icon_background: "#7CAED7"
+  adaptive_icon_foreground: "assets/Image/TraceNoxus LOGO.png"
+  min_icon_size: 48
+  remove_alpha_ios: true
 
 # The "flutter_lints" package below contains a set of recommended lints to
 # encourage good coding practices. The lint set provided by the package is
