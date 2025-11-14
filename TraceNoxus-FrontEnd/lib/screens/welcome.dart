@@ -123,7 +123,7 @@ class WelcomeScreen extends StatelessWidget {
                                 stops: [0.0, 0.55, 1.0],
                               ),
                               image: DecorationImage(
-                                image: const AssetImage('assets/Image/Girl.png'),
+                                image: const AssetImage('assets/Image/GIrl.png'),
                                 fit: BoxFit.cover,
                                 alignment: Alignment.centerRight,
                                 colorFilter: ColorFilter.mode(
