@@ -386,15 +386,17 @@ class _DashboardDrawer extends StatelessWidget {
             CircleAvatar(
               radius: 70,
               backgroundColor: Colors.white,
-              backgroundImage: user != null ? NetworkImage(user.profileImageUrl) : null,
-              child: user == null
+              backgroundImage: (user != null && user.profileImageUrl != null && user.profileImageUrl!.isNotEmpty)
+                  ? NetworkImage(user.profileImageUrl!)
+                  : null,
+              child: (user == null || user.profileImageUrl == null || user.profileImageUrl!.isEmpty)
                   ? const Icon(Icons.person, size: 70, color: Colors.grey)
                   : null,
             ),
             const SizedBox(height: 24),
             // User name
             Text(
-              user?.name ?? 'Loading...',
+              user?.name ?? user?.username ?? 'Loading...',
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 40,

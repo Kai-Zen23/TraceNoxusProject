@@ -164,7 +164,12 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
       } else if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
+        // Redirect based on user role (RBAC pattern)
+        if (authProvider.isAdmin) {
+          Navigator.pushReplacementNamed(context, '/admin');
+        } else {
+          Navigator.pushReplacementNamed(context, '/home');
+        }
       }
     }
   }

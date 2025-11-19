@@ -7,6 +7,7 @@ import 'screens/dashboard.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/welcome.dart';
+import 'screens/admin_dashboard_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,14 +20,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider()..initialize(),
+        ),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => LessonProvider()),
-
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Flutter Django Auth',
+        title: 'TraceNoxus',
         theme: ThemeData(
           primarySwatch: Colors.blue,
           useMaterial3: true,
@@ -37,6 +39,7 @@ class MyApp extends StatelessWidget {
           '/login': (context) => const LoginScreen(),
           '/register': (context) => const RegisterScreen(),
           '/home': (context) => const DashboardScreen(),
+          '/admin': (context) => const AdminDashboardScreen(),
         },
       ),
     );

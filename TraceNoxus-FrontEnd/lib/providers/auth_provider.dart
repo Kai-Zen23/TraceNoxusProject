@@ -1,25 +1,72 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/auth_model.dart';
+import '../models/user_model.dart';
 import '../services/auth_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
-  bool _isAuthenticated = false;
+  UserModel? _currentUser;
+  String? _accessToken;
+  String? _refreshToken;
   bool _isLoading = false;
   String? _error;
   String? _email;
 
-  bool get isAuthenticated => _isAuthenticated;
+  UserModel? get currentUser => _currentUser;
+  String? get accessToken => _accessToken;
+  bool get isAuthenticated => _currentUser != null && _accessToken != null;
+  bool get isAdmin => _currentUser?.isAdmin ?? false;
+  bool get isUser => _currentUser?.isUser ?? false;
   bool get isLoading => _isLoading;
   String? get error => _error;
   String? get email => _email;
+
+  // Legacy getter for backward compatibility
+  UserModel? get user => _currentUser;
 
   AuthProvider() {
     _checkAuthStatus();
   }
 
+  // Initialize from stored data (RBAC pattern)
+  Future<void> initialize() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token') ?? prefs.getString('access_token');
+      final refresh = prefs.getString('refresh') ?? prefs.getString('refresh_token');
+      final userJson = prefs.getString('user_data');
+
+      if (token != null && userJson != null) {
+        _accessToken = token;
+        _refreshToken = refresh;
+        _currentUser = UserModel.fromJson(
+          Map<String, dynamic>.from(
+            jsonDecode(userJson) as Map,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error initializing auth: $e');
+      await logout();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> _checkAuthStatus() async {
-    _isAuthenticated = await _authService.isAuthenticated();
+    // Check auth status - isAuthenticated is a getter, no need to set it
+    final isAuth = await _authService.isAuthenticated();
+    if (!isAuth) {
+      _currentUser = null;
+      _accessToken = null;
+    }
     notifyListeners();
   }
 
@@ -96,15 +143,55 @@ class AuthProvider extends ChangeNotifier {
       return false;
     }
 
-    _isAuthenticated = true;
+    // Store user data from login response (RBAC pattern)
+    if (response.user != null) {
+      _currentUser = UserModel.fromJson(response.user!);
+      _accessToken = response.token;
+      _refreshToken = response.refresh;
+
+      // Save to SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', _accessToken!);
+      await prefs.setString('refresh', _refreshToken!);
+      await prefs.setString('user_data', jsonEncode(_currentUser!.toJson()));
+    } else {
+      // Try to get user data from API
+      try {
+        final userData = await _authService.getUserData();
+        _currentUser = UserModel.fromJson(userData);
+        _accessToken = await _authService.getToken();
+        
+        // Save to SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        if (_accessToken != null) {
+          await prefs.setString('token', _accessToken!);
+          await prefs.setString('user_data', jsonEncode(_currentUser!.toJson()));
+        }
+      } catch (e) {
+        debugPrint('Could not fetch user data: $e');
+      }
+    }
+
     notifyListeners();
     return true;
   }
 
   Future<void> logout() async {
     await _authService.logout();
-    _isAuthenticated = false;
+    _currentUser = null;
+    _accessToken = null;
+    _refreshToken = null;
     _email = null;
+    _error = null;
+
+    // Clear SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    await prefs.remove('refresh');
+    await prefs.remove('access_token');
+    await prefs.remove('refresh_token');
+    await prefs.remove('user_data');
+
     notifyListeners();
   }
 
@@ -159,4 +246,25 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
     return true;
   }
-} 
+
+  // Refresh access token (RBAC pattern)
+  Future<bool> refreshAccessToken() async {
+    if (_refreshToken == null) return false;
+
+    try {
+      await _authService.refreshToken();
+      _accessToken = await _authService.getToken();
+
+      if (_accessToken != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', _accessToken!);
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      await logout();
+      return false;
+    }
+  }
+}

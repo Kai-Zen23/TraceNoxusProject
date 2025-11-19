@@ -9,8 +9,9 @@ class AuthResponse {
   final String? refresh;
   final String? message;
   final String? error;
+  final Map<String, dynamic>? user;
 
-  AuthResponse({this.token, this.refresh, this.message, this.error});
+  AuthResponse({this.token, this.refresh, this.message, this.error, this.user});
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) => _$AuthResponseFromJson(json);
   Map<String, dynamic> toJson() => _$AuthResponseToJson(this);

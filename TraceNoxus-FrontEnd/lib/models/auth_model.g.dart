@@ -11,6 +11,7 @@ AuthResponse _$AuthResponseFromJson(Map<String, dynamic> json) => AuthResponse(
       refresh: json['refresh'] as String?,
       message: json['message'] as String?,
       error: json['error'] as String?,
+      user: json['user'] as Map<String, dynamic>?,
     );
 
 Map<String, dynamic> _$AuthResponseToJson(AuthResponse instance) =>
@@ -19,6 +20,7 @@ Map<String, dynamic> _$AuthResponseToJson(AuthResponse instance) =>
       'refresh': instance.refresh,
       'message': instance.message,
       'error': instance.error,
+      'user': instance.user,
     };
 
 RegisterRequest _$RegisterRequestFromJson(Map<String, dynamic> json) =>

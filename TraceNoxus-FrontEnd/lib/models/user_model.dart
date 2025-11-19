@@ -1,22 +1,68 @@
 class UserModel {
-  final String name;
+  final int id;
   final String email;
-  final String profileImageUrl;
+  final String username;
+  final String role; // 'admin' or 'user'
+  final String? firstName;
+  final String? lastName;
+  final bool isVerified;
+  final DateTime? dateJoined;
+  final DateTime? lastLogin;
+  // Legacy fields for backward compatibility
+  final String? name;
+  final String? profileImageUrl;
   final int? age;
 
   UserModel({
-    required this.name,
+    required this.id,
     required this.email,
-    required this.profileImageUrl,
-    this.age
+    required this.username,
+    required this.role,
+    this.firstName,
+    this.lastName,
+    required this.isVerified,
+    this.dateJoined,
+    this.lastLogin,
+    this.name,
+    this.profileImageUrl,
+    this.age,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
-  return UserModel(
-    name: json['name'] ?? '',
-    email: json['email'] ?? '',
-    profileImageUrl: json['profile_image_url'] ?? '',
-    age: json['age'],
-  );
-}
+    return UserModel(
+      id: json['id'] as int,
+      email: json['email'] as String,
+      username: json['username'] as String? ?? json['email'] as String,
+      role: json['role'] as String? ?? 'user',
+      firstName: json['first_name'] as String?,
+      lastName: json['last_name'] as String?,
+      isVerified: json['is_verified'] as bool? ?? false,
+      dateJoined: json['date_joined'] != null
+          ? DateTime.parse(json['date_joined'] as String)
+          : null,
+      lastLogin: json['last_login'] != null
+          ? DateTime.parse(json['last_login'] as String)
+          : null,
+      name: json['name'] as String? ?? json['username'] as String? ?? json['first_name'] as String?,
+      profileImageUrl: json['profile_image_url'] as String?,
+      age: json['age'] as int?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'email': email,
+      'username': username,
+      'role': role,
+      'first_name': firstName,
+      'last_name': lastName,
+      'is_verified': isVerified,
+      'date_joined': dateJoined?.toIso8601String(),
+      'last_login': lastLogin?.toIso8601String(),
+    };
+  }
+
+  bool get isAdmin => role == 'admin';
+  bool get isUser => role == 'user';
 } 
