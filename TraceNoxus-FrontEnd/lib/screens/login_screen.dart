@@ -164,7 +164,13 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
       } else if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
+        // Redirect based on user role (RBAC pattern)
+        if (authProvider.isAdmin) {
+          Navigator.pushReplacementNamed(context, '/admin');
+        } else {
+          // Redirect to user home screen if not admin
+          Navigator.pushReplacementNamed(context, '/user-home');
+        }
       }
     }
   }
@@ -199,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // Background Image Layer
           Positioned.fill(
             child: Image.asset(
-              'assets/Image/BackGroundIm(2).png',
+              'assets/Image/backgrounduser.png',
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 // Fallback if image fails to load
@@ -325,7 +331,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.stretch,
                                     children: [
                                       const Text(
-                                        'Welcome back!',
+                                        'Welcome back',
                                         textAlign: TextAlign.left,
                                         style: TextStyle(
                                           color: Color(0xFF233A66),
@@ -436,7 +442,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                       Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          TextButton(
+                                          authProvider.isLoading
+                                          ? const SizedBox(
+                                            width: 120,
+                                            height: 20,
+                                            child: Center(
+                                              child: CircularProgressIndicator(strokeWidth: 2,),
+                                            ),
+                                          )
+                                         : TextButton(
                                             onPressed: _forgotPassword,
                                             child: const Text(
                                               'Forgot Password?',
@@ -446,7 +460,17 @@ class _LoginScreenState extends State<LoginScreen> {
                                               ),
                                             ),
                                           ),
-                                          TextButton(
+
+                                          authProvider.isLoading
+                                          ? const SizedBox(
+                                            width: 150,
+                                            height: 20,
+                                            child: Center(
+                                              child: CircularProgressIndicator(strokeWidth: 2),
+                                            ),
+                                          )
+
+                                         : TextButton(
                                             onPressed: _createAccount,
                                             child: const Text(
                                               'Create an account',

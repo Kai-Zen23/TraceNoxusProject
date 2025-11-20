@@ -65,7 +65,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         fit: StackFit.expand,
         children: [
           Image.asset(
-            'assets/image/background.png',
+            'assets/Image/Background.png',
             fit: BoxFit.cover,
           ),
           Center(

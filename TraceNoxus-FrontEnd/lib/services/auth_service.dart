@@ -71,7 +71,21 @@ class AuthService {
         data: request.toJson(),
       );
       
-      final authResponse = AuthResponse.fromJson(response.data);
+      // Extract user data from response before creating AuthResponse
+      Map<String, dynamic>? userData;
+      if (response.data is Map && response.data['user'] != null) {
+        userData = Map<String, dynamic>.from(response.data['user']);
+      }
+      
+      // Create AuthResponse with user data
+      final authResponse = AuthResponse(
+        token: response.data['access'],
+        refresh: response.data['refresh'],
+        message: response.data['message'],
+        error: response.data['error'],
+        user: userData,
+      );
+      
       if (authResponse.token != null) {
         await _storage.write(key: 'token', value: authResponse.token);
         await _storage.write(key: 'refresh', value: authResponse.refresh);
@@ -216,5 +230,31 @@ class AuthService {
       '$_baseUrl/api/user/',
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
+  }
+
+  // Refresh token
+  Future<void> refreshToken() async {
+    try {
+      final refreshToken = await _storage.read(key: 'refresh');
+      if (refreshToken == null) throw Exception('No refresh token found');
+
+      final response = await _dio.post(
+        '$_baseUrl/api/token/refresh/',
+        data: {'refresh': refreshToken},
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final newAccessToken = data['access'] as String;
+        await _storage.write(key: 'token', value: newAccessToken);
+      } else {
+        throw Exception('Failed to refresh token');
+      }
+    } on DioException catch (e) {
+      if (e.response?.data is Map) {
+        throw Exception(e.response?.data['error'] ?? 'Failed to refresh token');
+      }
+      throw Exception('Failed to refresh token: ${e.message}');
+    }
   }
 } 
