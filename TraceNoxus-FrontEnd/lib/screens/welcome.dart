@@ -343,7 +343,7 @@ class _WelcomeSpec {
     final logoIconSize = clamp(logoHeight * 0.22, 28, 44);
     final brandSpacing = clamp(width * 0.03, 10, 20);
     final heroSpacing = clamp(width * 0.08, 48, 80);
-    final voucherHeight = clamp(width * 0.22, 100, 180);
+    final voucherHeight = clamp(width * 0.22, 160, 180);
     final voucherFallbackFontSize = clamp(voucherHeight * 0.16, 18, 26);
 
     final cardOuterPadding = isDesktop ? 120.0 : isTablet ? 48.0 : 0.0;
