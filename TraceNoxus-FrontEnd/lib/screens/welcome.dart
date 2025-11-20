@@ -32,7 +32,7 @@ class WelcomeScreen extends StatelessWidget {
         children: [
           Positioned.fill(
             child: Image.asset(
-              'assets/Image/BackGroundIm(2).png',
+              'assets/Image/backgrounduser.png',
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) => Container(color: Colors.black87),
             ),
