@@ -200,6 +200,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final spec = _ResponsiveSpec.fromWidth(MediaQuery.of(context).size.width);
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Stack(
         fit: StackFit.expand,
         children: [

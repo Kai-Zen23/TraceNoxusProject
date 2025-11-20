@@ -110,6 +110,7 @@ class RegisterScreenState extends State<RegisterScreen> {
     final spec = ResponsiveSpec.fromWidth(MediaQuery.of(context).size.width);
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Stack(
         fit: StackFit.expand,
         children: [

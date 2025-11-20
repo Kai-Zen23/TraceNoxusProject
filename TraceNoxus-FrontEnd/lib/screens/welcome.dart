@@ -27,6 +27,7 @@ class WelcomeScreen extends StatelessWidget {
     final spec = _WelcomeSpec.fromWidth(MediaQuery.of(context).size.width);
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Stack(
         fit: StackFit.expand,
         children: [
