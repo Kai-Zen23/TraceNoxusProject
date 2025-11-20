@@ -8,6 +8,11 @@ import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/welcome.dart';
 import 'screens/admin_dashboard_screen.dart';
+import 'screens/user_home_screen.dart'; //add
+import 'screens/friends_screen.dart';  //add
+import 'screens/messages_screen.dart'; //add
+import 'screens/calendar_screen.dart'; //add
+import 'screens/notifications_screen.dart'; //add
 
 void main() {
   runApp(const MyApp());
@@ -40,6 +45,11 @@ class MyApp extends StatelessWidget {
           '/register': (context) => const RegisterScreen(),
           '/home': (context) => const DashboardScreen(),
           '/admin': (context) => const AdminDashboardScreen(),
+          '/user-home': (context) => const UserHomeScreen(), //add
+          '/friends': (context) => const FriendsScreen(), //add
+          '/messages': (context) => const MessagesScreen(), //add
+          '/calendar': (context) => const CalendarScreen(), //add
+          '/notifications': (context) => const NotificationsScreen(), //add
         },
       ),
     );

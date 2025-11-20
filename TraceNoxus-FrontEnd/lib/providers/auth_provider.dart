@@ -15,6 +15,7 @@ class AuthProvider extends ChangeNotifier {
   String? _error;
   String? _email;
 
+
   UserModel? get currentUser => _currentUser;
   String? get accessToken => _accessToken;
   bool get isAuthenticated => _currentUser != null && _accessToken != null;

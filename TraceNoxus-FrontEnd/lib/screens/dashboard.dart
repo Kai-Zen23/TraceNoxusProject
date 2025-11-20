@@ -25,10 +25,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-    Provider.of<UserProvider>(context, listen: false).loadUserData();
-    Provider.of<LessonProvider>(context, listen: false).fetchLessons();
-  });
-}
+      Provider.of<UserProvider>(context, listen: false).loadUserData();
+      Provider.of<LessonProvider>(context, listen: false).fetchLessons();
+    });
+  }
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
@@ -44,7 +44,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (context) => const LoginScreen()),
-              (route) => false,
+                  (route) => false,
             );
           }
         },
@@ -56,7 +56,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         },
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset('assets/Image/AdminBG.png', fit: BoxFit.cover),
+            ),
+            SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
             child: Column(
@@ -262,6 +267,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           ),
+        ),
+          ],
         ),
       ),
     );
@@ -502,11 +509,11 @@ class _AddLessonDialogState extends State<AddLessonDialog> {
     _titleController = TextEditingController(text: widget.lesson?.title ?? '');
     _teacherController = TextEditingController(text: widget.lesson?.teacher ?? '');
     _questionControllers = (widget.lesson?.questions.isNotEmpty ?? false)
-      ? widget.lesson!.questions.map((q) => TextEditingController(text: q.text)).toList()
-      : [TextEditingController()];
+        ? widget.lesson!.questions.map((q) => TextEditingController(text: q.text)).toList()
+        : [TextEditingController()];
     _answerControllers = (widget.lesson?.questions.isNotEmpty ?? false)
-      ? widget.lesson!.questions.map((q) => TextEditingController(text: q.answer)).toList()
-      : [TextEditingController()];
+        ? widget.lesson!.questions.map((q) => TextEditingController(text: q.answer)).toList()
+        : [TextEditingController()];
   }
 
   @override
@@ -591,13 +598,13 @@ class _AddLessonDialogState extends State<AddLessonDialog> {
       const Text('Questions', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
       const SizedBox(height: 16),
       ..._questionControllers.asMap().entries.map((entry) =>
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: TextField(
-            controller: entry.value,
-            decoration: InputDecoration(labelText: 'Question ${entry.key + 1}'),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: TextField(
+              controller: entry.value,
+              decoration: InputDecoration(labelText: 'Question ${entry.key + 1}'),
+            ),
           ),
-        ),
       ),
       TextButton(
         onPressed: () {
@@ -628,13 +635,13 @@ class _AddLessonDialogState extends State<AddLessonDialog> {
       const Text('Answers', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
       const SizedBox(height: 16),
       ..._answerControllers.asMap().entries.map((entry) =>
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: TextField(
-            controller: entry.value,
-            decoration: InputDecoration(labelText: 'Answer for Q${entry.key + 1}'),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: TextField(
+              controller: entry.value,
+              decoration: InputDecoration(labelText: 'Answer for Q${entry.key + 1}'),
+            ),
           ),
-        ),
       ),
       TextButton(
         onPressed: () {
@@ -965,4 +972,4 @@ class _ReviewDialog extends StatelessWidget {
       ),
     );
   }
-} 
+}

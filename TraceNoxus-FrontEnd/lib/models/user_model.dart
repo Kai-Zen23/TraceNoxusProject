@@ -44,7 +44,7 @@ class UserModel {
           ? DateTime.parse(json['last_login'] as String)
           : null,
       name: json['name'] as String? ?? json['username'] as String? ?? json['first_name'] as String?,
-      profileImageUrl: json['profile_image_url'] as String?,
+      profileImageUrl: (json['profile_image_url'] as String?) ?? (json['profile_image'] as String?) ?? (json['profileImage'] as String?),
       age: json['age'] as int?,
     );
   }
@@ -65,4 +65,4 @@ class UserModel {
 
   bool get isAdmin => role == 'admin';
   bool get isUser => role == 'user';
-} 
+}
