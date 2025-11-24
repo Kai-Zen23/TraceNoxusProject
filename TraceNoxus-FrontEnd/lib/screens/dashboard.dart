@@ -59,7 +59,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Stack(
           children: [
             Positioned.fill(
-              child: Image.asset('assets/Image/AdminBG.png', fit: BoxFit.cover),
+              child: Image.asset('assets/image/AdminBG.png', fit: BoxFit.cover),
             ),
             SingleChildScrollView(
           child: Padding(

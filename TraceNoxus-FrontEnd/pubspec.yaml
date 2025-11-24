@@ -48,16 +48,26 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.3.9
   flutter_lints: ^2.0.0
   build_runner: ^2.4.7
   json_serializable: ^6.7.1
 
+
+
+
+flutter_native_splash:
+  color: "#ffffff"
+  image: "assets/image/image.png"
+  android: true
+  ios: true
+
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/images/TRACE NOXUS.png"
+  image_path: "assets/image/Charactergirl.png"
   adaptive_icon_background: "#ffffff"
-  adaptive_icon_foreground: "assets/images/TRACE NOXUS.png"
+  adaptive_icon_foreground: "assets/image/Charactergirl.png"
 
 # The "flutter_lints" package below contains a set of recommended lints to
 # encourage good coding practices. The lint set provided by the package is
@@ -72,7 +82,7 @@ flutter_icons:
 flutter:
   uses-material-design: true
   assets:
-    - assets/Image/
+    - assets/image/
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

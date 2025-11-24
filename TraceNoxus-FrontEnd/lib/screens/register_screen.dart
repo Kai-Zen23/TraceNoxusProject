@@ -117,7 +117,7 @@ class RegisterScreenState extends State<RegisterScreen> {
           // Background Image Layer
           Positioned.fill(
             child: Image.asset(
-              'assets/Image/backgrounduser.png',
+              'assets/image/backgrounduser.png',
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return Container(color: Colors.black87);
@@ -155,7 +155,7 @@ class RegisterScreenState extends State<RegisterScreen> {
                                   child: Padding(
                                     padding: const EdgeInsets.only(right: 10),
                                     child: Image.asset(
-                                      'assets/Image/TraceNoxus LOGO.png',
+                                      'assets/image/TraceNoxusLOGO.png',
                                       height: spec.logoHeight * 0.65, // Smaller to fit better
                                       fit: BoxFit.contain,
                                       errorBuilder: (context, error, stackTrace) {
@@ -186,7 +186,7 @@ class RegisterScreenState extends State<RegisterScreen> {
                                   child: Padding(
                                     padding: const EdgeInsets.only(left: 10),
                                     child: Image.asset(
-                                      'assets/Image/VG VOUCHER DRAFT.png',
+                                      'assets/image/VG VOUCHER DRAFT.png',
                                       height: spec.voucherHeight * 0.65, // Smaller to fit better
                                       fit: BoxFit.contain,
                                       errorBuilder: (context, error, stackTrace) {
@@ -236,7 +236,7 @@ class RegisterScreenState extends State<RegisterScreen> {
                                 stops: [0.0, 0.55, 1.0],
                               ),
                               image: DecorationImage(
-                                image: const AssetImage('assets/Image/GIrl.png'),
+                                image: const AssetImage('assets/image/Charactergirl.png'),
                                 fit: BoxFit.cover,
                                 alignment: const Alignment(0.3, 0.5), // Move more to the right
                                 colorFilter: ColorFilter.mode(

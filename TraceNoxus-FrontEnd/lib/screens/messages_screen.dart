@@ -1,17 +1,36 @@
 // d:\Software Engineering Project\TraceNoxusProject\TraceNoxus-FrontEnd\lib\screens\messages_screen.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/message_provider.dart';
+import '../providers/auth_provider.dart';
+import 'chat_screen.dart';
 
-class MessagesScreen extends StatelessWidget {
+class MessagesScreen extends StatefulWidget {
   const MessagesScreen({super.key});
 
   @override
+  State<MessagesScreen> createState() => _MessagesScreenState();
+}
+
+class _MessagesScreenState extends State<MessagesScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<MessageProvider>(context, listen: false).loadConversation();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<MessageProvider>(context);
+    final auth = Provider.of<AuthProvider>(context);
     return Scaffold(
       body: Stack(
         children: [
           Positioned.fill(
             child: Image.asset(
-              'assets/Image/backgrounduser.png',
+              'assets/image/backgrounduser.png',
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => Container(color: const Color(0xFF1A1A1A)),
             ),
@@ -22,37 +41,51 @@ class MessagesScreen extends StatelessWidget {
               child: Column(
                 children: [
                   Row(
-                    children: const [
-                      Expanded(
+                    children: [
+                      const Expanded(
                         child: Text(
                           'Messages',
                           style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700),
                         ),
                       ),
-                      Icon(Icons.chat_bubble, color: Colors.white),
+                      IconButton(
+                        icon: const Icon(Icons.refresh, color: Colors.white),
+                        onPressed: () => provider.loadConversation(),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  Expanded(
-                    child: Center(
-                      child: Container(
-                        width: 300,
-                        height: 300,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2E5E88),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: Image.asset(
-                          'assets/Image/placeholder.png',
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Center(
-                            child: Icon(Icons.image_outlined, color: Colors.white, size: 72),
-                          ),
-                        ),
+                  const SizedBox(height: 12),
+                  ListTile(
+                    leading: const Icon(Icons.public, color: Colors.white),
+                    title: const Text('General Chat', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                    subtitle: const Text('Chat with everyone', style: TextStyle(color: Colors.white70)),
+                    onTap: () => Navigator.pushNamed(context, '/general-chat'),
+                  ),
+                  const Divider(color: Colors.white24),
+                  if (provider.isLoading)
+                    const Expanded(child: Center(child: CircularProgressIndicator()))
+                  else if (provider.error != null)
+                    Expanded(child: Center(child: Text(provider.error!, style: const TextStyle(color: Colors.white))))
+                  else
+                    Expanded(
+                      child: ListView.separated(
+                        itemCount: provider.conversations.length,
+                        separatorBuilder: (_, __) => const Divider(color: Colors.white24),
+                        itemBuilder: (context, index) {
+                          final convo = provider.conversations[index];
+                          final otherId = convo['otherId'] as int;
+                          final last = convo['last'] as String;
+                          return ListTile(
+                            leading: const Icon(Icons.person, color: Colors.white),
+                            title: Text('User $otherId', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                            subtitle: Text(last, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white70)),
+                            onTap: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(otherUserId: otherId)));
+                            },
+                          );
+                        },
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
