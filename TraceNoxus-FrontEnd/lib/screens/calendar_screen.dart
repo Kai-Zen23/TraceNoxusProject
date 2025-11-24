@@ -11,7 +11,7 @@ class CalendarScreen extends StatelessWidget {
         children: [
           Positioned.fill(
             child: Image.asset(
-              'assets/Image/backgrounduser.png',
+              'assets/image/backgrounduser.png',
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => Container(color: const Color(0xFF1A1A1A)),
             ),
@@ -44,7 +44,7 @@ class CalendarScreen extends StatelessWidget {
                         ),
                         clipBehavior: Clip.antiAlias,
                         child: Image.asset(
-                          'assets/Image/placeholder.png',
+                          'assets/image/placeholder.png',
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => const Center(
                             child: Icon(Icons.image_outlined, color: Colors.white, size: 72),

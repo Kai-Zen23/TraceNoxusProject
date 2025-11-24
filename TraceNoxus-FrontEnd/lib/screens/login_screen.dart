@@ -207,7 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // Background Image Layer
           Positioned.fill(
             child: Image.asset(
-              'assets/Image/backgrounduser.png',
+              'assets/image/backgrounduser.png',
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 // Fallback if image fails to load
@@ -238,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 30),
                             child: Image.asset(
-                              'assets/Image/TraceNoxus LOGO.png',
+                              'assets/image/TraceNoxusLOGO.png',
                               height: spec.logoHeight,
                               fit: BoxFit.contain,
                               errorBuilder: (context, error, stackTrace) {
@@ -265,7 +265,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           SizedBox(height: spec.brandSpacing),
                           Image.asset(
-                            'assets/Image/VG VOUCHER DRAFT.png',
+                            'assets/image/VG VOUCHER DRAFT.png',
                             height: spec.voucherHeight,
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) {
@@ -310,7 +310,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 stops: [0.0, 0.55, 1.0],
                               ),
                               image: DecorationImage(
-                                image: const AssetImage('assets/Image/GIrl.png'),
+                                image: const AssetImage('assets/image/Charactergirl.png'),
                                 fit: BoxFit.cover,
                                 alignment: Alignment.centerRight,
                                 colorFilter: ColorFilter.mode(

@@ -33,7 +33,7 @@ class WelcomeScreen extends StatelessWidget {
         children: [
           Positioned.fill(
             child: Image.asset(
-              'assets/Image/backgrounduser.png',
+              'assets/image/backgrounduser.png',
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) => Container(color: Colors.black87),
             ),
@@ -59,7 +59,7 @@ class WelcomeScreen extends StatelessWidget {
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 50),
                             child: Image.asset(
-                              'assets/Image/TraceNoxus LOGO.png',
+                              'assets/image/TraceNoxusLOGO.png',
                               height: spec.logoHeight,
                               fit: BoxFit.contain,
                               errorBuilder: (context, error, stackTrace) => Container(
@@ -81,7 +81,7 @@ class WelcomeScreen extends StatelessWidget {
                           ),
                           SizedBox(height: spec.brandSpacing),
                           Image.asset(
-                            'assets/Image/VG VOUCHER DRAFT.png',
+                            'assets/image/VG VOUCHER DRAFT.png',
                             height: spec.voucherHeight,
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) => Text(
@@ -124,7 +124,7 @@ class WelcomeScreen extends StatelessWidget {
                                 stops: [0.0, 0.55, 1.0],
                               ),
                               image: DecorationImage(
-                                image: const AssetImage('assets/Image/GIrl.png'),
+                                image: const AssetImage('assets/image/Charactergirl.png'),
                                 fit: BoxFit.cover,
                                 alignment: Alignment.centerRight,
                                 colorFilter: ColorFilter.mode(

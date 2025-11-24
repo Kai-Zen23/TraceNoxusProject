@@ -44,7 +44,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         fit: StackFit.expand,
         children: [
           Image.asset(
-            'assets/Image/Background.png',
+            'assets/image/Background.png',
             fit: BoxFit.cover,
           ),
           Center(

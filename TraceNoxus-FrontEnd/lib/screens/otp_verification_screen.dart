@@ -88,7 +88,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 children: [
                   Positioned.fill(
                     child: Image.asset(
-                      'assets/Image/backgrounduser.png',
+                      'assets/image/backgrounduser.png',
                       fit: BoxFit.cover,
                       filterQuality: FilterQuality.low,
                       cacheWidth: w,
@@ -258,7 +258,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                   borderRadius: BorderRadius.circular(24),
                                   image: DecorationImage(
                                     image: const AssetImage(
-                                        'assets/Image/GIrl.png'), // unchanged
+                                        'assets/image/Charactergirl.png'), // unchanged
                                     fit: BoxFit.cover,
                                     colorFilter: ColorFilter.mode(
                                       Colors.black.withOpacity(0.35),
