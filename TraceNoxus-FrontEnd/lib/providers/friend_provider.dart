@@ -18,7 +18,7 @@ class FriendProvider extends ChangeNotifier {
     _isLoading = true; _error = null; notifyListeners();
     try {
       _allUsers = await _service.fetchAllUsers();
-    } catch (e) { _error = 'Failed to load users'; }
+    } catch (e) { _error = 'Failed to load users: $e'; }
     _isLoading = false; notifyListeners();
   }
 

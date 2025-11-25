@@ -1,4 +1,3 @@
-// d:\Software Engineering Project\TraceNoxusProject\TraceNoxus-FrontEnd\lib\services\friend_service.dart
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../core/constants/app_constants.dart';
@@ -13,7 +12,12 @@ class FriendService {
   Future<List<Map<String, dynamic>>> fetchAllUsers() async {
     final t = await _token();
     final r = await _dio.get('$_baseUrl/api/users/all/', options: Options(headers: {'Authorization': 'Bearer $t'}));
-    final data = r.data['results'] ?? r.data; // handles both list or wrapped
+    
+    dynamic data = r.data;
+    if (data is Map<String, dynamic> && data.containsKey('results')) {
+      data = data['results'];
+    }
+    
     return List<Map<String, dynamic>>.from(data);
   }
 
