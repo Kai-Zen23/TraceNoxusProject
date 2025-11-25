@@ -1,10 +1,10 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import 'otp_verification_screen.dart';
 import 'login_screen.dart';
 import '../widgets/ResponsiveSpec.dart';
+import '../widgets/custom_text_field.dart';
 
 
 class RegisterScreen extends StatefulWidget {
@@ -293,76 +293,28 @@ class RegisterScreenState extends State<RegisterScreen> {
                                         style: const TextStyle(fontSize: 16),
                                       ),
                                       SizedBox(height: spec.fieldSpacing),
-                                      const Text(
-                                        'Email',
-                                        style: TextStyle(
-                                          color: Color(0xFF233A66),
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                        ),
-                                      ),
-                                      TextFormField(
+                                      CustomTextField(
+                                        label: 'Email',
+                                        hint: 'Valid Email',
                                         controller: _emailController,
                                         keyboardType: TextInputType.emailAddress,
                                         validator: _validateEmail,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Valid Email',
-                                          enabledBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(color: Color(0xFF88AEC9), width: 2),
-                                          ),
-                                          focusedBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(color: Color(0xFF233A66), width: 2),
-                                          ),
-                                        ),
-                                        style: const TextStyle(fontSize: 16),
+                                        spacing: spec.fieldSpacing,
                                       ),
-                                      SizedBox(height: spec.fieldSpacing),
-                                      const Text(
-                                        'Password',
-                                        style: TextStyle(
-                                          color: Color(0xFF233A66),
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                        ),
-                                      ),
-                                      TextFormField(
+                                      CustomTextField(
+                                        label: 'Password',
+                                        hint: 'Password',
                                         controller: _passwordController,
-                                        obscureText: true,
+                                        isPassword: true,
                                         validator: _validatePassword,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Password',
-                                          enabledBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(color: Color(0xFF88AEC9), width: 2),
-                                          ),
-                                          focusedBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(color: Color(0xFF233A66), width: 2),
-                                          ),
-                                        ),
-                                        style: const TextStyle(fontSize: 16),
+                                        spacing: spec.fieldSpacing,
                                       ),
-                                      SizedBox(height: spec.fieldSpacing),
-                                      const Text(
-                                        'Confirm Password',
-                                        style: TextStyle(
-                                          color: Color(0xFF233A66),
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                        ),
-                                      ),
-                                      TextFormField(
+                                      CustomTextField(
+                                        label: 'Confirm Password',
+                                        hint: 'Confirm Password',
                                         controller: _confirmPasswordController,
-                                        obscureText: true,
+                                        isPassword: true,
                                         validator: _validateConfirmPassword,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Confirm Password',
-                                          enabledBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(color: Color(0xFF88AEC9), width: 2),
-                                          ),
-                                          focusedBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(color: Color(0xFF233A66), width: 2),
-                                          ),
-                                        ),
-                                        style: const TextStyle(fontSize: 16),
                                       ),
                                       SizedBox(height: spec.sectionGap),
                                       Row(
