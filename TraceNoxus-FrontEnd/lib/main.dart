@@ -1,3 +1,4 @@
+import 'package:TraceNoxus/services/message_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
@@ -16,6 +17,14 @@ import 'screens/notifications_screen.dart'; //add
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:TraceNoxus/screens/InitialScreen.dart';
 import 'package:TraceNoxus/screens/register_screen.dart';
+import 'providers/message_provider.dart';
+import 'screens/chat_screen.dart';
+import 'providers/friend_provider.dart';
+import 'providers/room_chat_provider.dart';
+import 'screens/general_chat_screen.dart';
+import 'providers/friend_requests_provider.dart';
+import 'screens/friend_requests_screen.dart';
+
 
 
 void main() {
@@ -35,7 +44,12 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => LessonProvider()),
-        ChangeNotifierProvider(create: (_) => AuthProvider()), // add
+        ChangeNotifierProvider(create: (_) => MessageProvider()),
+        ChangeNotifierProvider(create: (_) => FriendProvider()),
+        ChangeNotifierProvider(create: (_) => RoomChatProvider()),
+        ChangeNotifierProvider(create: (_) => FriendRequestsProvider()),
+    
+        
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -54,10 +68,13 @@ class MyApp extends StatelessWidget {
           '/admin': (context) => const AdminDashboardScreen(),
           '/user-home': (context) => const UserHomeScreen(), //add
           '/friends': (context) => const FriendsScreen(), //add
-          '/messages': (context) => const MessagesScreen(), //add
+          '/messages': (context) => const MessagesScreen(),
+          '/chat': (context) => const ChatScreen(otherUserId: 0),
+          '/friend-requests': (context) => const FriendRequestsScreen(),
           '/calendar': (context) => const CalendarScreen(), //add
           '/notifications': (context) => const NotificationsScreen(), //add
           '/Initial': (context) => const InitialScreenWrapper(), //add
+          '/general-chat': (context) => const GeneralChatScreen(),
         },
       ),
     );
