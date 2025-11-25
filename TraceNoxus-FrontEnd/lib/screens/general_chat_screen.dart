@@ -1,6 +1,6 @@
-// d:\Software Engineering Project\TraceNoxusProject\TraceNoxus-FrontEnd\lib\screens\general_chat_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import 'package:TraceNoxus/providers/room_chat_provider.dart';
 import 'package:TraceNoxus/providers/friend_provider.dart';
 import 'package:TraceNoxus/providers/auth_provider.dart';
@@ -14,6 +14,7 @@ class GeneralChatScreen extends StatefulWidget {
 class _GeneralChatScreenState extends State<GeneralChatScreen> {
   final _controller = TextEditingController();
   final _scroll = ScrollController();
+  late RoomChatProvider _chatProvider;
 
   @override
   void initState() {
@@ -27,9 +28,17 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _chatProvider = Provider.of<RoomChatProvider>(context, listen: false);
+  }
+
+  @override
   void dispose() {
-    Provider.of<RoomChatProvider>(context, listen: false).disconnect();
-    _controller.dispose(); _scroll.dispose(); super.dispose();
+    _chatProvider.disconnect();
+    _controller.dispose();
+    _scroll.dispose();
+    super.dispose();
   }
 
   @override
@@ -97,6 +106,13 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
                                       borderRadius: BorderRadius.circular(16),
                                     ),
                                     child: Text(m.content, style: const TextStyle(color: Colors.white)),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2, left: 4, right: 4),
+                                    child: Text(
+                                      DateFormat('h:mm a').format(m.timestamp.toUtc().add(const Duration(hours: 8))),
+                                      style: const TextStyle(color: Colors.white54, fontSize: 10),
+                                    ),
                                   ),
                                 ],
                               ),
