@@ -1,9 +1,10 @@
-// d:\Software Engineering Project\TraceNoxusProject\TraceNoxus-FrontEnd\lib\screens\chat_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../providers/message_provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/message_model.dart';
+import '../providers/friend_provider.dart';
 
 class ChatScreen extends StatefulWidget {
   final int otherUserId;
@@ -16,17 +17,29 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scroll = ScrollController();
+  late MessageProvider _messageProvider;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<MessageProvider>(context, listen: false).loadConversation(otherUserId: widget.otherUserId);
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      final provider = Provider.of<MessageProvider>(context, listen: false);
+      provider.setSelf(auth);
+      provider.loadChat(widget.otherUserId);
+      provider.connect(widget.otherUserId);
     });
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _messageProvider = Provider.of<MessageProvider>(context, listen: false);
+  }
+
+  @override
   void dispose() {
+    _messageProvider.disconnect();
     _controller.dispose();
     _scroll.dispose();
     super.dispose();
@@ -36,7 +49,15 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     final provider = Provider.of<MessageProvider>(context);
     final auth = Provider.of<AuthProvider>(context);
+    final friendProvider = Provider.of<FriendProvider>(context);
     final me = auth.currentUser?.id ?? 0;
+
+    // Find user details for header
+    final user = friendProvider.allUsers.firstWhere(
+      (u) => u['id'] == widget.otherUserId,
+      orElse: () => {'username': 'User ${widget.otherUserId}', 'email': '', 'id': widget.otherUserId},
+    );
+    final name = (user['username'] ?? user['email'] ?? 'User ${widget.otherUserId}').toString();
 
     return Scaffold(
       body: Stack(
@@ -52,7 +73,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: Row(
                     children: [
                       IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
-                      Expanded(child: Text('User ${widget.otherUserId}', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700))),
+                      Expanded(child: Text(name, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700))),
                     ],
                   ),
                 ),
@@ -67,16 +88,50 @@ class _ChatScreenState extends State<ChatScreen> {
                     itemBuilder: (context, index) {
                       final m = provider.messages[index];
                       final isMe = m.sender == me;
-                      return Align(
-                        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(vertical: 6),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: isMe ? const Color(0xFF2B4267) : const Color(0xFF2E5E88),
-                            borderRadius: BorderRadius.circular(16),
+                      return GestureDetector(
+                        onLongPress: () {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Delete Message'),
+                              content: const Text('Are you sure you want to delete this message?'),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                                TextButton(
+                                  onPressed: () {
+                                    provider.deleteMessage(m.id);
+                                    Navigator.pop(ctx);
+                                  },
+                                  child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        child: Align(
+                          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                          child: Column(
+                            crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                margin: const EdgeInsets.symmetric(vertical: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: isMe ? const Color(0xFF2B4267) : const Color(0xFF2E5E88),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Text(m.content, style: const TextStyle(color: Colors.white)),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                child: Text(
+                                  DateFormat('h:mm a').format(m.timestamp.toUtc().add(const Duration(hours: 8))),
+                                  style: const TextStyle(color: Colors.white54, fontSize: 10),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                            ],
                           ),
-                          child: Text(m.content, style: const TextStyle(color: Colors.white)),
                         ),
                       );
                     },

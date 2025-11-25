@@ -64,6 +64,23 @@ class AuthService {
     }
   }
 
+  Future<AuthResponse> resendOtp(String email) async {
+    try {
+      final response = await _dio.post(
+        '$_baseUrl/api/resend-otp/',
+        data: {'email': email},
+      );
+      return AuthResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      if (e.response?.data is Map) {
+        return AuthResponse(
+          error: e.response?.data['error'] ?? 'Failed to resend OTP',
+        );
+      }
+      return AuthResponse(error: 'Failed to resend OTP: ${e.message}');
+    }
+  }
+
   Future<AuthResponse> login(LoginRequest request) async {
     try {
       final response = await _dio.post(
@@ -257,4 +274,4 @@ class AuthService {
       throw Exception('Failed to refresh token: ${e.message}');
     }
   }
-} 
+}

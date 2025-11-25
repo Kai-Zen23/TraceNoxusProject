@@ -125,6 +125,30 @@ class AuthProvider extends ChangeNotifier {
     return true;
   }
 
+  Future<bool> resendOtp() async {
+    if (_email == null) {
+      _error = 'Email not found. Please register first.';
+      notifyListeners();
+      return false;
+    }
+
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    final response = await _authService.resendOtp(_email!);
+    _isLoading = false;
+
+    if (response.error != null) {
+      _error = response.error;
+      notifyListeners();
+      return false;
+    }
+
+    notifyListeners();
+    return true;
+  }
+
   Future<bool> login(String email, String password) async {
     _isLoading = true;
     _error = null;
