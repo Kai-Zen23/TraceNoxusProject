@@ -1,31 +1,27 @@
-import 'package:TraceNoxus/services/message_service.dart';
+import 'package:TraceNoxus/screens/InitialScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
-import 'providers/lesson_provider.dart';
-import 'providers/user_provider.dart';
-import 'screens/dashboard.dart';
-import 'screens/login_screen.dart';
-import 'screens/register_screen.dart';
-import 'screens/welcome.dart';
-import 'screens/admin_dashboard_screen.dart';
-import 'screens/user_home_screen.dart'; //add
-import 'screens/friends_screen.dart';  //add
-import 'screens/messages_screen.dart'; //add
-import 'screens/calendar_screen.dart'; //add
-import 'screens/notifications_screen.dart'; //add
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:TraceNoxus/screens/InitialScreen.dart';
-import 'package:TraceNoxus/screens/register_screen.dart';
-import 'providers/message_provider.dart';
-import 'screens/chat_screen.dart';
 import 'providers/friend_provider.dart';
-import 'providers/room_chat_provider.dart';
-import 'screens/general_chat_screen.dart';
 import 'providers/friend_requests_provider.dart';
+import 'providers/lesson_provider.dart';
+import 'providers/message_provider.dart';
+import 'providers/room_chat_provider.dart';
+import 'providers/user_provider.dart';
+import 'screens/admin_dashboard_screen.dart';
+import 'screens/calendar_screen.dart';
+import 'screens/chat_screen.dart';
+import 'screens/dashboard.dart';
 import 'screens/friend_requests_screen.dart';
-
-
+import 'screens/friends_screen.dart';
+import 'screens/general_chat_screen.dart';
+import 'screens/login_screen.dart';
+import 'screens/messages_screen.dart';
+import 'screens/notifications_screen.dart';
+import 'screens/register_screen.dart';
+import 'screens/teams_screen.dart';
+import 'screens/user_home_screen.dart';
+import 'screens/welcome.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,8 +44,6 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => FriendProvider()),
         ChangeNotifierProvider(create: (_) => RoomChatProvider()),
         ChangeNotifierProvider(create: (_) => FriendRequestsProvider()),
-    
-        
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -58,8 +52,8 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.blue,
           useMaterial3: true,
         ),
-       // home: const WelcomeScreen(),
-        home: const InitialScreenWrapper(),
+        // home: const WelcomeScreen(),
+        home: const WelcomeScreen(),
         routes: {
           '/welcome': (context) => const WelcomeScreen(),
           '/login': (context) => const LoginScreen(),
@@ -75,6 +69,7 @@ class MyApp extends StatelessWidget {
           '/notifications': (context) => const NotificationsScreen(), //add
           '/Initial': (context) => const InitialScreenWrapper(), //add
           '/general-chat': (context) => const GeneralChatScreen(),
+          '/teams': (context) => const TeamsScreen(),
         },
       ),
     );

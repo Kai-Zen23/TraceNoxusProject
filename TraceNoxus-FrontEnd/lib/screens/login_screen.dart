@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'package:TraceNoxus/screens/register_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
@@ -169,7 +168,6 @@ class _LoginScreenState extends State<LoginScreen> {
         if (authProvider.isAdmin) {
           Navigator.pushReplacementNamed(context, '/admin');
         } else {
-          // Redirect to user home screen if not admin
           Navigator.pushReplacementNamed(context, '/user-home');
         }
       }
