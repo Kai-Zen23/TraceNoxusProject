@@ -274,7 +274,20 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                               const SizedBox(height: 16),
 
                               TextButton(
-                                onPressed: () {},
+                                onPressed: () async {
+                                  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                                  final success = await authProvider.resendOtp();
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(success 
+                                          ? 'OTP resent successfully!' 
+                                          : (authProvider.error ?? 'Failed to resend OTP')),
+                                        backgroundColor: success ? Colors.green : Colors.red,
+                                      ),
+                                    );
+                                  }
+                                },
                                 child: const Text(
                                   'Resend Code',
                                   style: TextStyle(

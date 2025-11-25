@@ -33,4 +33,19 @@ class MessageService {
     );
     return MessageModel.fromJson(response.data as Map<String, dynamic>);
   }
+  Future<void> deleteMessage(int messageId) async {
+    final token = await _getToken();
+    await _dio.delete(
+      '$_baseUrl/api/messages/$messageId/',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
+
+  Future<void> deleteConversation(int otherUserId) async {
+    final token = await _getToken();
+    await _dio.delete(
+      '$_baseUrl/api/messages/conversation/$otherUserId/',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
 }
