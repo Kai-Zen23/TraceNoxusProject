@@ -1,13 +1,19 @@
 // d:\Software Engineering Project\TraceNoxusProject\TraceNoxus-FrontEnd\lib\providers\room_chat_provider.dart
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:web_socket_channel/io.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../core/constants/app_constants.dart';
 import '../services/room_message_service.dart';
 import '../models/message_model.dart';
 
 class RoomChatProvider extends ChangeNotifier {
   final RoomMessageService _service = RoomMessageService();
+  final _storage = const FlutterSecureStorage();
   bool _isLoading = false;
   String? _error;
   List<MessageModel> _messages = [];
+  IOWebSocketChannel? _channel;
 
   bool get isLoading => _isLoading;
   String? get error => _error;
@@ -20,8 +26,37 @@ class RoomChatProvider extends ChangeNotifier {
     _isLoading = false; notifyListeners();
   }
 
+  Future<void> connect({String room = 'general'}) async {
+    final t = await _storage.read(key: 'token');
+    final uri = Uri.parse(AppConstants.baseUrl);
+    final wsScheme = uri.scheme == 'https' ? 'wss' : 'ws';
+    final hostPort = uri.hasPort ? '${uri.host}:${uri.port}' : uri.host;
+    final wsUrl = Uri.parse('$wsScheme://$hostPort/ws/chat/$room/?token=$t');
+    _channel = IOWebSocketChannel.connect(wsUrl);
+    _channel!.stream.listen((event) {
+      try {
+        final data = jsonDecode(event);
+        final msg = MessageModel.fromJson(Map<String, dynamic>.from(data));
+        _messages = [..._messages, msg];
+        notifyListeners();
+      } catch (_) {}
+    }, onError: (e) {
+      _error = 'WebSocket error';
+      notifyListeners();
+    }, onDone: () {
+      _error = 'WebSocket closed';
+      notifyListeners();
+    });
+  }
+
+  void disconnect() {
+    _channel?.sink.close();
+    _channel = null;
+  }
+
   Future<void> send(String content, {String room = 'general'}) async {
-    final m = await _service.sendRoomMessage(content: content, room: room);
-    _messages = [..._messages, m]; notifyListeners();
+    if (_channel != null) {
+      _channel!.sink.add(jsonEncode({'message': content}));
+    }
   }
 }

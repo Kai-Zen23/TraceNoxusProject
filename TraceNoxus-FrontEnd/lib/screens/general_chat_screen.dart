@@ -20,12 +20,17 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<FriendProvider>(context, listen: false).loadAllUsers();
-      Provider.of<RoomChatProvider>(context, listen: false).load(room: 'general');
+      final p = Provider.of<RoomChatProvider>(context, listen: false);
+      p.load(room: 'general');
+      p.connect(room: 'general');
     });
   }
 
   @override
-  void dispose() { _controller.dispose(); _scroll.dispose(); super.dispose(); }
+  void dispose() {
+    Provider.of<RoomChatProvider>(context, listen: false).disconnect();
+    _controller.dispose(); _scroll.dispose(); super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
