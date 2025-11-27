@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
 buildscript {
     ext.kotlin_version = '2.1.10'
     repositories {
@@ -30,19 +32,23 @@ subprojects {
     project.evaluationDependsOn(':app')
 }
 
-// Ensure all Android modules compile against Java 11 and Kotlin JVM 11
+// Ensure all Android modules compile against Java 17 and Kotlin JVM 17
 subprojects { proj ->
     def androidExt = proj.extensions.findByName('android')
     if (androidExt != null) {
         androidExt.compileOptions {
-            sourceCompatibility JavaVersion.VERSION_11
-            targetCompatibility JavaVersion.VERSION_11
+            sourceCompatibility JavaVersion.VERSION_17
+            targetCompatibility JavaVersion.VERSION_17
         }
     }
     proj.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach { task ->
         task.kotlinOptions {
-            jvmTarget = '11'
+            jvmTarget = '17'
         }
+    }
+    proj.tasks.withType(JavaCompile).configureEach { task ->
+        task.sourceCompatibility = JavaVersion.VERSION_17
+        task.targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
