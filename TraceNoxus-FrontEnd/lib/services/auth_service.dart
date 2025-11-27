@@ -213,6 +213,10 @@ class AuthService {
     required String name,
     int? age,
     dynamic profileImageFile,
+    String? gamesPlayed,
+    String? competitiveLevel,
+    String? preferredRoles,
+    bool removeProfileImage = false,
   }) async {
     final token = await getToken();
     if (token == null) throw Exception('User not authenticated');
@@ -220,6 +224,11 @@ class AuthService {
     final formData = FormData();
     formData.fields.add(MapEntry('name', name));
     if (age != null) formData.fields.add(MapEntry('age', age.toString()));
+    if (gamesPlayed != null) formData.fields.add(MapEntry('games_played', gamesPlayed));
+    if (competitiveLevel != null) formData.fields.add(MapEntry('competitive_level', competitiveLevel));
+    if (preferredRoles != null) formData.fields.add(MapEntry('preferred_roles', preferredRoles));
+    if (removeProfileImage) formData.fields.add(const MapEntry('remove_profile_image', 'true'));
+    
     if (profileImageFile != null) {
       formData.files.add(MapEntry(
         'profile_image',

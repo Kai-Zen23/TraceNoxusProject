@@ -12,6 +12,10 @@ class UserModel {
   final String? name;
   final String? profileImageUrl;
   final int? age;
+  final String? gamesPlayed;
+  final String? competitiveLevel;
+  final String? preferredRoles;
+  final String? gamespadPlayed;
 
   UserModel({
     required this.id,
@@ -26,6 +30,10 @@ class UserModel {
     this.name,
     this.profileImageUrl,
     this.age,
+    this.gamesPlayed,
+    this.competitiveLevel,
+    this.preferredRoles,
+    this.gamespadPlayed,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -44,8 +52,12 @@ class UserModel {
           ? DateTime.parse(json['last_login'] as String)
           : null,
       name: json['name'] as String? ?? json['username'] as String? ?? json['first_name'] as String?,
-      profileImageUrl: (json['profile_image_url'] as String?) ?? (json['profile_image'] as String?) ?? (json['profileImage'] as String?),
+      profileImageUrl: (json['profile_image'] as String?) ?? (json['profile_image_url'] as String?) ?? (json['profileImage'] as String?),
       age: json['age'] as int?,
+      gamesPlayed: json['games_played'] as String?,
+      competitiveLevel: json['competitive_level'] as String?,
+      preferredRoles: json['preferred_roles'] as String?,
+      gamespadPlayed: json['Game_genre'] as String?,
     );
   }
 
@@ -60,6 +72,11 @@ class UserModel {
       'is_verified': isVerified,
       'date_joined': dateJoined?.toIso8601String(),
       'last_login': lastLogin?.toIso8601String(),
+      'profile_image': profileImageUrl,
+      'games_played': gamesPlayed,
+      'competitive_level': competitiveLevel,
+      'preferred_roles': preferredRoles,
+      'Game_genre': gamespadPlayed,
     };
   }
 

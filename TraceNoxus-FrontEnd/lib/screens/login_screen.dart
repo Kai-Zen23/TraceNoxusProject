@@ -205,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // Background Image Layer
           Positioned.fill(
             child: Image.asset(
-              'assets/image/backgrounduser.png',
+              'assets/image/background_user.png',
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 // Fallback if image fails to load

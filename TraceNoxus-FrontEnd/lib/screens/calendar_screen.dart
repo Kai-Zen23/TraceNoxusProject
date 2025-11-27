@@ -63,7 +63,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         children: [
           Positioned.fill(
             child: Image.asset(
-              'assets/image/backgrounduser.png',
+              'assets/image/background_user.png',
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) =>
                   Container(color: const Color(0xFF0E1C2C)),

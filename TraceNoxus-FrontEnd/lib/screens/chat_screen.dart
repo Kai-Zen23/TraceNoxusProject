@@ -63,7 +63,7 @@ class _ChatScreenState extends State<ChatScreen> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset('assets/image/backgrounduser.png', fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: const Color(0xFF1A1A1A))),
+            child: Image.asset('assets/image/background_user.png', fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: const Color(0xFF1A1A1A))),
           ),
           SafeArea(
             child: Column(
