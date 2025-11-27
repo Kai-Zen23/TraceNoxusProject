@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/message_provider.dart';
 import '../providers/auth_provider.dart';
-import '../models/message_model.dart';
+
 import '../providers/friend_provider.dart';
 
 class ChatScreen extends StatefulWidget {

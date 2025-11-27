@@ -48,6 +48,7 @@ dependencies:
   video_player: ^2.8.1
   chewie: ^1.7.1
   visibility_detector: ^0.4.0+2
+  google_fonts: ^6.1.0
 
 
 dev_dependencies:

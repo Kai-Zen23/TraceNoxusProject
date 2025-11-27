@@ -22,6 +22,7 @@ class WelcomeScreen extends StatelessWidget {
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     final spec = _WelcomeSpec.fromWidth(MediaQuery.of(context).size.width);

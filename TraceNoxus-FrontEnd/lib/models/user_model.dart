@@ -80,6 +80,6 @@ class UserModel {
     };
   }
 
-  bool get isAdmin => role == 'admin';
-  bool get isUser => role == 'user';
+  bool get isAdmin => role.toLowerCase() == 'admin';
+  bool get isUser => role.toLowerCase() == 'user';
 }

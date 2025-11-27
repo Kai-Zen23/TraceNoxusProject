@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
+import 'settings_screen.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -111,7 +112,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.settings, color: Colors.blue),
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                          );
+                        },
                       ),
                     ],
                   ),
