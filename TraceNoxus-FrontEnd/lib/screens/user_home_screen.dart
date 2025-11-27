@@ -4,8 +4,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 import '../providers/user_provider.dart';
 import '../providers/auth_provider.dart';
+import 'profile_screen.dart';
 
 class UserHomeScreen extends StatefulWidget {
   const UserHomeScreen({super.key});
@@ -32,12 +34,13 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   Future<void> _initializePlayer() async {
     try {
       _videoPlayerController = VideoPlayerController.networkUrl(
-        Uri.parse('https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4'),
+        Uri.parse(
+            'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4'),
       );
       await _videoPlayerController!.initialize();
       _chewieController = ChewieController(
         videoPlayerController: _videoPlayerController!,
-        autoPlay: true,
+        autoPlay: false,
         looping: true,
         aspectRatio: _videoPlayerController!.value.aspectRatio,
         errorBuilder: (context, errorMessage) {
@@ -64,13 +67,17 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   }
 
   void _openFriends() => Navigator.pushNamed(context, '/friends');
+
   void _openMessages() => Navigator.pushNamed(context, '/messages');
+
   void _openCalendar() => Navigator.pushNamed(context, '/calendar');
+
   void _openNotifications() => Navigator.pushNamed(context, '/notifications');
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.gallery, maxWidth: 800);
+    final image = await picker.pickImage(
+        source: ImageSource.gallery, maxWidth: 800);
     if (image != null) {
       setState(() => _pickedImage = image);
     }
@@ -80,13 +87,15 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final name = _nameController.text.trim();
     await userProvider.updateUserProfile(
-      name: name.isEmpty ? (userProvider.user?.name ?? userProvider.user?.username ?? '') : name,
+      name: name.isEmpty ? (userProvider.user?.name ??
+          userProvider.user?.username ?? '') : name,
       profileImageFile: _pickedImage,
     );
     await userProvider.loadUserData();
     if (mounted) {
       setState(() => _pickedImage = null);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile updated')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile updated')));
     }
   }
 
@@ -102,172 +111,190 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final user = userProvider.user;
-    if (user != null && _nameController.text.isEmpty) {
-      _nameController.text = user.name ?? user.username;
-    }
 
     return Scaffold(
-      drawer: Drawer(
-        backgroundColor: const Color(0xFF2B4267),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(topRight: Radius.circular(32), bottomRight: Radius.circular(32)),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              const SizedBox(height: 24),
-              CircleAvatar(
-                radius: 54,
-                backgroundColor: Colors.white,
-                backgroundImage: _pickedImage != null
-                    ? FileImage(File(_pickedImage!.path))
-                    : (user != null && user.profileImageUrl != null && user.profileImageUrl!.isNotEmpty)
-                        ? NetworkImage(user.profileImageUrl!)
-                        : null as ImageProvider?,
-                child: (_pickedImage == null && (user == null || user.profileImageUrl == null || user.profileImageUrl!.isEmpty))
-                    ? const Icon(Icons.person, size: 54, color: Colors.grey)
-                    : null,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                user?.name ?? user?.username ?? 'User',
-                style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: TextField(
-                  controller: _nameController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    labelText: 'Edit name',
-                    labelStyle: TextStyle(color: Colors.white70),
-                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white54)),
-                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white)),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: userProvider.isLoading ? null : _pickImage,
-                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF9CB3C9), foregroundColor: const Color(0xFF2B4267)),
-                        child: const Text('Change Photo'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: userProvider.isLoading ? null : _saveProfile,
-                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF9CB3C9), foregroundColor: const Color(0xFF2B4267)),
-                        child: userProvider.isLoading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Save Changes'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: ElevatedButton(
-                  onPressed: _logout,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
-                  child: const Text('Logout'),
-                ),
-              ),
-              const Spacer(),
-            ],
-          ),
-        ),
-      ),
       body: Stack(
         children: [
+          // Background
           Positioned.fill(
             child: Image.asset(
-              'assets/image/backgrounduser.png',
+              'assets/image/background_user.png',
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(color: const Color(0xFF1A1A1A)),
+              errorBuilder: (_, __, ___) =>
+                  Container(color: const Color(0xFF0F172A)),
             ),
           ),
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Row(
+            child: Column(
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 12),
+                  child: Row(
                     children: [
-                      Builder(
-                        builder: (context) => IconButton(
-                          icon: const Icon(Icons.menu, color: Colors.white),
-                          onPressed: () => Scaffold.of(context).openDrawer(),
+                      const Text(
+                        'Trace Noxus',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          fontFamily: 'Serif', // Or custom font
                         ),
                       ),
-                      const Expanded(
-                        child: Text(
-                          'TRACE NOXUS',
-                          style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w800),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
+                      const Spacer(),
                       IconButton(
-                        icon: const Icon(Icons.search, color: Colors.white),
+                        icon: const Icon(
+                            Icons.search, color: Colors.white, size: 28),
                         onPressed: () {},
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const ProfileScreen()),
+                          );
+                        },
+                        child: CircleAvatar(
+                          radius: 18,
+                          backgroundColor: Colors.grey[800],
+                          backgroundImage: user?.profileImageUrl != null
+                              ? NetworkImage(user!.profileImageUrl!)
+                              : null,
+                          child: user?.profileImageUrl == null
+                              ? const Icon(Icons.person, size: 20, color: Colors
+                              .white)
+                              : null,
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Welcome, ${user?.name ?? user?.username ?? 'User'}',
-                      style: const TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: Center(
-                      child: Container(
-                        width: double.infinity,
-                        height: 260,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
-                          color: Colors.black,
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: _chewieController != null &&
-                                _chewieController!.videoPlayerController.value.isInitialized
-                            ? Chewie(controller: _chewieController!)
-                            : const Center(child: CircularProgressIndicator()),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Highlights',
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 24),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    height: 72,
-                    decoration: BoxDecoration(color: const Color(0xFF6EA5CE).withOpacity(0.85), borderRadius: BorderRadius.circular(24)),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                ),
+
+                // Main Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
                       children: [
-                        IconButton(icon: const Icon(Icons.group, color: Colors.white), onPressed: _openFriends),
-                        IconButton(icon: const Icon(Icons.chat_bubble, color: Colors.white), onPressed: _openMessages),
-                        IconButton(icon: const Icon(Icons.calendar_month, color: Colors.white), onPressed: _openCalendar),
-                        IconButton(icon: const Icon(Icons.notifications, color: Colors.white), onPressed: _openNotifications),
+                        const SizedBox(height: 20),
+                        
+                        const Text(
+                          'Highlights',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Video Player Section
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 24),
+                          height: 220,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(24),
+                            color: Colors.black,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.5),
+                                blurRadius: 10,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: _chewieController != null &&
+                              _chewieController!.videoPlayerController.value
+                                  .isInitialized
+                              ? VisibilityDetector(
+                            key: const Key('video-player-visibility'),
+                            onVisibilityChanged: (info) {
+                              if (info.visibleFraction > 0.5) {
+                                if (!_videoPlayerController!.value.isPlaying) {
+                                  _videoPlayerController!.play();
+                                }
+                              } else {
+                                if (_videoPlayerController!.value.isPlaying) {
+                                  _videoPlayerController!.pause();
+                                }
+                              }
+                            },
+                            child: Chewie(controller: _chewieController!),
+                          )
+                              : const Center(
+                              child: CircularProgressIndicator()),
+                        ),
+                        const SizedBox(height: 100), // Space for bottom nav
                       ],
                     ),
                   ),
+                ),
+              ],
+            ),
+          ),
+
+          // Bottom Navigation Bar
+          Positioned(
+            left: 24,
+            right: 24,
+            bottom: 24,
+            child: Container(
+              height: 70,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF4A90E2).withOpacity(0.9),
+                    const Color(0xFF002F6C).withOpacity(0.9),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(35),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildNavItem(
+                      Icons.chat_bubble_outline, 'Message', _openMessages),
+                  _buildNavItem(Icons.calendar_today, 'Events', _openCalendar),
+                  _buildNavItem(Icons.notifications_none, 'Notifications',
+                      _openNotifications),
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.pinkAccent.withOpacity(0.2), // Highlight color
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: Colors.white, size: 24),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white, fontSize: 10),
           ),
         ],
       ),

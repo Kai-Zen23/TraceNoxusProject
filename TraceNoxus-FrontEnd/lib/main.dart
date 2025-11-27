@@ -8,8 +8,12 @@ import 'providers/lesson_provider.dart';
 import 'providers/message_provider.dart';
 import 'providers/room_chat_provider.dart';
 import 'providers/user_provider.dart';
+import 'providers/admin_provider.dart';
+import 'providers/event_provider.dart';
+import 'providers/notification_provider.dart';
 import 'screens/admin_dashboard_screen.dart';
 import 'screens/calendar_screen.dart';
+import 'screens/create_event_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/dashboard.dart';
 import 'screens/friend_requests_screen.dart';
@@ -44,6 +48,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => FriendProvider()),
         ChangeNotifierProvider(create: (_) => RoomChatProvider()),
         ChangeNotifierProvider(create: (_) => FriendRequestsProvider()),
+        ChangeNotifierProvider(create: (_) => AdminProvider()),
+        ChangeNotifierProvider(create: (_) => EventProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -58,7 +65,7 @@ class MyApp extends StatelessWidget {
           '/welcome': (context) => const WelcomeScreen(),
           '/login': (context) => const LoginScreen(),
           '/register': (context) => const RegisterScreen(),
-          '/home': (context) => const DashboardScreen(),
+          //'/home': (context) => const DashboardScreen(),
           '/admin': (context) => const AdminDashboardScreen(),
           '/user-home': (context) => const UserHomeScreen(), //add
           '/friends': (context) => const FriendsScreen(), //add
@@ -66,6 +73,7 @@ class MyApp extends StatelessWidget {
           '/chat': (context) => const ChatScreen(otherUserId: 0),
           '/friend-requests': (context) => const FriendRequestsScreen(),
           '/calendar': (context) => const CalendarScreen(), //add
+          '/create-event': (context) => const CreateEventScreen(), //add
           '/notifications': (context) => const NotificationsScreen(), //add
           '/Initial': (context) => const InitialScreenWrapper(), //add
           '/general-chat': (context) => const GeneralChatScreen(),

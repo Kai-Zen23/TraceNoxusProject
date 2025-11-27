@@ -69,7 +69,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
           // Background Image
           Positioned.fill(
             child: Image.asset(
-              'assets/image/backgrounduser.png',
+              'assets/image/background_user.png',
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => Container(color: const Color(0xFF1A1A1A)),
             ),

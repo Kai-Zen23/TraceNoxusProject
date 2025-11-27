@@ -29,13 +29,15 @@ class AuthProvider extends ChangeNotifier {
   UserModel? get user => _currentUser;
 
   AuthProvider() {
-    _checkAuthStatus();
+    // _checkAuthStatus(); // Removed from constructor
   }
 
   // Initialize from stored data (RBAC pattern)
   Future<void> initialize() async {
-    _isLoading = true;
-    notifyListeners();
+    // Avoid notifying listeners synchronously during creation
+    // _isLoading = true; // Don't set this here if it triggers notifyListeners immediately
+
+    await _checkAuthStatus(); // Check auth status first
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -56,7 +58,7 @@ class AuthProvider extends ChangeNotifier {
       debugPrint('Error initializing auth: $e');
       await logout();
     } finally {
-      _isLoading = false;
+      // _isLoading = false;
       notifyListeners();
     }
   }
@@ -68,7 +70,7 @@ class AuthProvider extends ChangeNotifier {
       _currentUser = null;
       _accessToken = null;
     }
-    notifyListeners();
+    // notifyListeners(); // Removed to prevent side effects during initialization
   }
 
   Future<bool> register(String email, String username, String password) async {
@@ -274,6 +276,7 @@ class AuthProvider extends ChangeNotifier {
 
   // Refresh access token (RBAC pattern)
   Future<bool> refreshAccessToken() async {
+    // Check if refresh token exists
     if (_refreshToken == null) return false;
 
     try {

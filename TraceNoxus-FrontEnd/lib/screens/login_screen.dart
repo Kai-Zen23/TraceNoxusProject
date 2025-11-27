@@ -159,16 +159,16 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(authProvider.error ?? 'Login failed'),
+            content: Text(authProvider.error ?? 'Login failed. Please check your credentials.'),
             backgroundColor: Colors.red,
           ),
         );
       } else if (mounted) {
         // Redirect based on user role (RBAC pattern)
         if (authProvider.isAdmin) {
-          Navigator.pushReplacementNamed(context, '/admin');
+          Navigator.pushNamedAndRemoveUntil(context, '/admin', (route) => false);
         } else {
-          Navigator.pushReplacementNamed(context, '/user-home');
+          Navigator.pushNamedAndRemoveUntil(context, '/user-home', (route) => false);
         }
       }
     }
@@ -205,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // Background Image Layer
           Positioned.fill(
             child: Image.asset(
-              'assets/image/backgrounduser.png',
+              'assets/image/background_user.png',
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 // Fallback if image fails to load
