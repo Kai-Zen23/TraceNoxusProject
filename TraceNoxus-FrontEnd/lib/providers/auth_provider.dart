@@ -15,12 +15,22 @@ class AuthProvider extends ChangeNotifier {
   String? _error;
   String? _email;
 
+  // Role switching fields
+  String? _virtualRole; // null = use actual role, 'user' = override to user mode
+  String? _originalRole; // Store original role for safety check
+
 
   UserModel? get currentUser => _currentUser;
   String? get accessToken => _accessToken;
   bool get isAuthenticated => _currentUser != null && _accessToken != null;
-  bool get isAdmin => _currentUser?.isAdmin ?? false;
-  bool get isUser => _currentUser?.isUser ?? false;
+  
+  // Role switching getters
+  String get currentRole => _virtualRole ?? _currentUser?.role ?? 'user';
+  bool get isAdmin => currentRole.toLowerCase() == 'admin';
+  bool get isUser => currentRole.toLowerCase() == 'user';
+  bool get isInUserMode => _virtualRole == 'user';
+  bool get canSwitchRoles => _originalRole == 'admin' || _currentUser?.role.toLowerCase() == 'admin';
+  
   bool get isLoading => _isLoading;
   String? get error => _error;
   String? get email => _email;
@@ -44,6 +54,10 @@ class AuthProvider extends ChangeNotifier {
       final token = prefs.getString('token') ?? prefs.getString('access_token');
       final refresh = prefs.getString('refresh') ?? prefs.getString('refresh_token');
       final userJson = prefs.getString('user_data');
+      
+      // Load virtual role if exists
+      _virtualRole = prefs.getString('virtual_role');
+      _originalRole = prefs.getString('original_role');
 
       if (token != null && userJson != null) {
         _accessToken = token;
@@ -210,6 +224,10 @@ class AuthProvider extends ChangeNotifier {
     _refreshToken = null;
     _email = null;
     _error = null;
+    
+    // Clear role switching state
+    _virtualRole = null;
+    _originalRole = null;
 
     // Clear SharedPreferences
     final prefs = await SharedPreferences.getInstance();
@@ -218,6 +236,8 @@ class AuthProvider extends ChangeNotifier {
     await prefs.remove('access_token');
     await prefs.remove('refresh_token');
     await prefs.remove('user_data');
+    await prefs.remove('virtual_role');
+    await prefs.remove('original_role');
 
     notifyListeners();
   }
@@ -294,5 +314,35 @@ class AuthProvider extends ChangeNotifier {
       await logout();
       return false;
     }
+  }
+
+  // Role switching methods
+  /// Switch from admin mode to user mode
+  /// Only works if current user is actually an admin
+  Future<void> switchToUserMode() async {
+    if (_currentUser?.role.toLowerCase() == 'admin') {
+      _originalRole = _currentUser!.role;
+      _virtualRole = 'user';
+      
+      // Persist virtual role
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('virtual_role', _virtualRole!);
+      await prefs.setString('original_role', _originalRole!);
+      
+      notifyListeners();
+    }
+  }
+
+  /// Switch back to admin mode from user mode
+  /// Clears the virtual role override
+  Future<void> switchToAdminMode() async {
+    _virtualRole = null;
+    
+    // Clear persisted virtual role
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('virtual_role');
+    await prefs.remove('original_role');
+    
+    notifyListeners();
   }
 }

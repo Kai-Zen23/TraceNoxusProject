@@ -134,6 +134,20 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
     }
   }
+  Future<void> _switchToAdminMode(BuildContext context, AuthProvider authProvider) async {
+    // Stop video to prevent disposal errors
+    if (_videoPlayerController != null && _videoPlayerController!.value.isPlaying) {
+      _videoPlayerController!.pause();
+    }
+
+    await authProvider.switchToAdminMode();
+
+    if (!mounted) return;
+
+    Navigator.pushNamedAndRemoveUntil(context, '/admin', (route) => false);
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -152,12 +166,13 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                   Container(color: const Color(0xFF0F172A)),
             ),
           ),
+
           SafeArea(
             child: Column(
               children: [
                 // Header
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                   child: Row(
                     children: [
                       const Text(
@@ -170,6 +185,29 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                         ),
                       ),
                       const Spacer(),
+
+                      // Role mode toggle for admins in user mode
+                      Consumer<AuthProvider>(
+                        builder: (context, authProvider, child) {
+                          if (authProvider.canSwitchRoles && authProvider.isInUserMode) {
+                            return Row(
+                              children: [
+                                const Text('', style: TextStyle(color: Colors.white70, fontSize: 5)),
+                                const SizedBox(width: 4),
+                                Switch(
+                                  value: false,
+                                  onChanged: (value) {
+                                    if (value) _switchToAdminMode(context, authProvider);
+                                  },
+                                  activeColor: Colors.green,
+                                  inactiveThumbColor: Colors.blue,
+                                ),
+                              ],
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
                       // Friend Requests Button moved to bottom nav
                       const SizedBox(width: 8),
                       IconButton(

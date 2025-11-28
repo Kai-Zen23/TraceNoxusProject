@@ -7,6 +7,7 @@ import '../screens/login_screen.dart';
 import '../screens/settings_screen.dart'; // Import SettingsScreen
 import '../providers/admin_provider.dart';
 import '../providers/notification_provider.dart';
+import '../providers/auth_provider.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({Key? key}) : super(key: key);
@@ -15,15 +16,21 @@ class AdminDashboardScreen extends StatefulWidget {
   State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
 }
 
+
+
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   int _selectedIndex = 0;
-  bool _isDarkMode = false; // Mock Dark Mode state
+  bool _isDarkMode = false;
+
+  // Mock Dark Mode state
 
   void _toggleTheme() {
     setState(() {
       _isDarkMode = !_isDarkMode;
     });
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +50,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       );
     }
 
+
     return Scaffold(
       backgroundColor: _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFD3E3EA),
       appBar: AppBar(
@@ -50,6 +58,32 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : const Color(0xFF2B4267),
         foregroundColor: Colors.white,
         actions: [
+          // Role Mode Switch (Admin only)
+          if (authProvider.canSwitchRoles)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Row(
+                children: [
+                  Text(
+                    authProvider.isInUserMode ? 'User Mode' : 'Admin Mode',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(width: 8),
+                  Switch(
+                    value: !authProvider.isInUserMode,
+                    onChanged: (isAdmin) {
+                      if (isAdmin) {
+                        _switchToAdminMode(context, authProvider);
+                      } else {
+                        _showSwitchToUserDialog(context, authProvider);
+                      }
+                    },
+                    activeColor: Colors.green,
+                    inactiveThumbColor: Colors.blue,
+                  ),
+                ],
+              ),
+            ),
           IconButton(
             icon: Icon(_isDarkMode ? Icons.light_mode : Icons.dark_mode),
             onPressed: _toggleTheme,
@@ -114,6 +148,59 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ],
       ),
     );
+  }
+
+  // Role switching helper methods
+  void _showSwitchToUserDialog(BuildContext context, AuthProvider authProvider) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Switch to User Mode?'),
+        content: const Text(
+          'You will experience the app as a normal user. '
+          'Admin features will be hidden. You can switch back to Admin Mode at any time from the toggle.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await authProvider.switchToUserMode();
+
+              if (context.mounted) {
+                // Navigate to user dashboard
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/user-home',
+                  (route) => false,
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+            ),
+            child: const Text('Switch to User Mode'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _switchToAdminMode(BuildContext context, AuthProvider authProvider) async {
+    await authProvider.switchToAdminMode();
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Switched back to Admin Mode'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 }
 
