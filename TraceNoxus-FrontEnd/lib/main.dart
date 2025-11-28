@@ -11,7 +11,7 @@ import 'providers/user_provider.dart';
 import 'providers/admin_provider.dart';
 import 'providers/event_provider.dart';
 import 'providers/notification_provider.dart';
-import 'providers/user_management_provider.dart'; // ADD THIS IMPORT
+import 'providers/user_management_provider.dart';
 import 'screens/admin_dashboard_screen.dart';
 import 'screens/calendar_screen.dart';
 import 'screens/create_event_screen.dart';
@@ -27,9 +27,10 @@ import 'screens/register_screen.dart';
 import 'screens/teams_screen.dart';
 import 'screens/user_home_screen.dart';
 import 'screens/welcome.dart';
-import 'screens/user_management_screen.dart'; // ADD THIS IMPORT
+import 'screens/user_management_screen.dart';
 
 void main() {
+  debugPrint = (String? message, {int? wrapWidth}) {}; // Disable debug prints
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
@@ -53,7 +54,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AdminProvider()),
         ChangeNotifierProvider(create: (_) => EventProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
-        ChangeNotifierProvider(create: (_) => UserManagementProvider()), // ADD THIS PROVIDER
+        ChangeNotifierProvider(create: (_) => UserManagementProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -62,26 +63,24 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.blue,
           useMaterial3: true,
         ),
-        // home: const WelcomeScreen(),
         home: const WelcomeScreen(),
         routes: {
           '/welcome': (context) => const WelcomeScreen(),
           '/login': (context) => const LoginScreen(),
           '/register': (context) => const RegisterScreen(),
-          //'/home': (context) => const DashboardScreen(),
           '/admin': (context) => const AdminDashboardScreen(),
-          '/user-home': (context) => const UserHomeScreen(), //add
-          '/friends': (context) => const FriendsScreen(), //add
+          '/user-home': (context) => const UserHomeScreen(),
+          '/friends': (context) => const FriendsScreen(),
           '/messages': (context) => const MessagesScreen(),
           '/chat': (context) => const ChatScreen(otherUserId: 0),
           '/friend-requests': (context) => const FriendRequestsScreen(),
-          '/calendar': (context) => const CalendarScreen(), //add
-          '/create-event': (context) => const CreateEventScreen(), //add
-          '/notifications': (context) => const NotificationsScreen(), //add
-          '/Initial': (context) => const InitialScreenWrapper(), //add
+          '/calendar': (context) => const CalendarScreen(),
+          '/create-event': (context) => const CreateEventScreen(),
+          '/notifications': (context) => const NotificationsScreen(),
+          '/Initial': (context) => const InitialScreenWrapper(),
           '/general-chat': (context) => const GeneralChatScreen(),
           '/teams': (context) => const TeamsScreen(),
-          '/user-management': (context) => const UserManagementScreen(), // ADD THIS ROUTE
+          '/user-management': (context) => const UserManagementScreen(),
         },
       ),
     );
