@@ -306,7 +306,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
                           },
                         ),
                 ),
-
                 // Bottom Navigation Bar
                 Container(
                   margin: const EdgeInsets.all(16),

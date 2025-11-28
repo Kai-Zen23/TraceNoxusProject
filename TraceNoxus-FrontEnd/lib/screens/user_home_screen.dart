@@ -7,7 +7,12 @@ import 'package:chewie/chewie.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import '../providers/user_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/friend_requests_provider.dart';
+import '../providers/message_provider.dart';
+import '../providers/event_provider.dart';
+import '../providers/notification_provider.dart';
 import 'profile_screen.dart';
+
 
 class UserHomeScreen extends StatefulWidget {
   const UserHomeScreen({super.key});
@@ -26,8 +31,28 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   void initState() {
     super.initState();
     _initializePlayer();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<UserProvider>(context, listen: false).loadUserData();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final context = this.context;
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      await userProvider.loadUserData();
+      
+      final userId = userProvider.user?.id;
+      if (userId != null) {
+        final friendRequestsProvider = Provider.of<FriendRequestsProvider>(context, listen: false);
+        friendRequestsProvider.setUserId(userId);
+        friendRequestsProvider.refresh();
+
+        final messageProvider = Provider.of<MessageProvider>(context, listen: false);
+        messageProvider.loadAllConversations();
+
+        final eventProvider = Provider.of<EventProvider>(context, listen: false);
+        eventProvider.setUserId(userId);
+        eventProvider.fetchEvents();
+
+        final notificationProvider = Provider.of<NotificationProvider>(context, listen: false);
+        notificationProvider.setUserId(userId);
+        notificationProvider.fetchNotifications();
+      }
     });
   }
 
@@ -68,11 +93,14 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
   void _openFriends() => Navigator.pushNamed(context, '/friends');
 
+  void _openFriendquest() => Navigator.pushNamed(context, '/friend-requests');
+
   void _openMessages() => Navigator.pushNamed(context, '/messages');
 
   void _openCalendar() => Navigator.pushNamed(context, '/calendar');
 
   void _openNotifications() => Navigator.pushNamed(context, '/notifications');
+
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -129,8 +157,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               children: [
                 // Header
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     children: [
                       const Text(
@@ -139,13 +166,14 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                           color: Colors.white,
                           fontSize: 24,
                           fontWeight: FontWeight.w800,
-                          fontFamily: 'Serif', // Or custom font
+                          fontFamily: 'Serif',
                         ),
                       ),
                       const Spacer(),
+                      // Friend Requests Button moved to bottom nav
+                      const SizedBox(width: 8),
                       IconButton(
-                        icon: const Icon(
-                            Icons.search, color: Colors.white, size: 28),
+                        icon: const Icon(Icons.search, color: Colors.white, size: 28),
                         onPressed: () {},
                       ),
                       const SizedBox(width: 8),
@@ -153,8 +181,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(
-                                builder: (context) => const ProfileScreen()),
+                            MaterialPageRoute(builder: (context) => const ProfileScreen()),
                           );
                         },
                         child: CircleAvatar(
@@ -164,8 +191,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                               ? NetworkImage(user!.profileImageUrl!)
                               : null,
                           child: user?.profileImageUrl == null
-                              ? const Icon(Icons.person, size: 20, color: Colors
-                              .white)
+                              ? const Icon(Icons.person_3_outlined, size: 20, color: Colors.white)
                               : null,
                         ),
                       ),
@@ -179,7 +205,6 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                     child: Column(
                       children: [
                         const SizedBox(height: 20),
-                        
                         const Text(
                           'Highlights',
                           style: TextStyle(
@@ -208,25 +233,23 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                           ),
                           clipBehavior: Clip.antiAlias,
                           child: _chewieController != null &&
-                              _chewieController!.videoPlayerController.value
-                                  .isInitialized
+                                  _chewieController!.videoPlayerController.value.isInitialized
                               ? VisibilityDetector(
-                            key: const Key('video-player-visibility'),
-                            onVisibilityChanged: (info) {
-                              if (info.visibleFraction > 0.5) {
-                                if (!_videoPlayerController!.value.isPlaying) {
-                                  _videoPlayerController!.play();
-                                }
-                              } else {
-                                if (_videoPlayerController!.value.isPlaying) {
-                                  _videoPlayerController!.pause();
-                                }
-                              }
-                            },
-                            child: Chewie(controller: _chewieController!),
-                          )
-                              : const Center(
-                              child: CircularProgressIndicator()),
+                                  key: const Key('video-player-visibility'),
+                                  onVisibilityChanged: (info) {
+                                    if (info.visibleFraction > 0.5) {
+                                      if (!_videoPlayerController!.value.isPlaying) {
+                                        _videoPlayerController!.play();
+                                      }
+                                    } else {
+                                      if (_videoPlayerController!.value.isPlaying) {
+                                        _videoPlayerController!.pause();
+                                      }
+                                    }
+                                  },
+                                  child: Chewie(controller: _chewieController!),
+                                )
+                              : const Center(child: CircularProgressIndicator()),
                         ),
                         const SizedBox(height: 100), // Space for bottom nav
                       ],
@@ -263,11 +286,58 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildNavItem(
-                      Icons.chat_bubble_outline, 'Message', _openMessages),
-                  _buildNavItem(Icons.calendar_today, 'Events', _openCalendar),
-                  _buildNavItem(Icons.notifications_none, 'Notifications',
-                      _openNotifications),
+                  Consumer<FriendRequestsProvider>(
+                    builder: (context, provider, child) {
+                      return _buildNavItem(
+                        Icons.person,
+                        'Friend Request',
+                        () {
+                          provider.markAsSeen();
+                          _openFriendquest();
+                        },
+                        badgeCount: provider.badgeCount,
+                      );
+                    },
+                  ),
+                  Consumer<MessageProvider>(
+                    builder: (context, provider, child) {
+                      return _buildNavItem(
+                        Icons.chat_bubble_outline,
+                        'Message',
+                        () {
+                          provider.markAsSeen();
+                          _openMessages();
+                        },
+                        badgeCount: provider.badgeCount,
+                      );
+                    },
+                  ),
+                  Consumer<EventProvider>(
+                    builder: (context, provider, child) {
+                      return _buildNavItem(
+                        Icons.calendar_today,
+                        'Events',
+                        () {
+                          provider.markAsSeen();
+                          _openCalendar();
+                        },
+                        badgeCount: provider.badgeCount,
+                      );
+                    },
+                  ),
+                  Consumer<NotificationProvider>(
+                    builder: (context, provider, child) {
+                      return _buildNavItem(
+                        Icons.announcement,
+                        'Announcement',
+                        () {
+                          provider.markAsSeen();
+                          _openNotifications();
+                        },
+                        badgeCount: provider.badgeCount,
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -277,19 +347,50 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, VoidCallback onTap) {
+  Widget _buildNavItem(IconData icon, String label, VoidCallback onTap,
+      {int? badgeCount}) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.pinkAccent.withOpacity(0.2), // Highlight color
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: Colors.white, size: 24),
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.pinkAccent.withOpacity(0.2), // Highlight color
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: Colors.white, size: 24),
+              ),
+              if (badgeCount != null && badgeCount > 0)
+                Positioned(
+                  right: -4,
+                  top: -4,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      '$badgeCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 4),
           Text(

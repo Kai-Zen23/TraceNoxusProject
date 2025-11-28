@@ -1,3 +1,4 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/io.dart';
 import 'dart:convert';
@@ -8,12 +9,14 @@ import '../core/constants/app_constants.dart';
 
 class MessageProvider extends ChangeNotifier {
   final MessageService _service = MessageService();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
   AuthProvider? _authProvider;
   
   List<MessageModel> _chatMessages = [];
   List<MessageModel> _allMessages = [];
   bool _isLoading = false;
   String? _error;
+  int _seenCount = 0;
   
   // WebSocket Support
   IOWebSocketChannel? _channel;
@@ -21,6 +24,16 @@ class MessageProvider extends ChangeNotifier {
   List<MessageModel> get messages => _chatMessages;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  
+  int get badgeCount => (_allMessages.length - _seenCount).clamp(0, _allMessages.length);
+
+  Future<void> markAsSeen() async {
+    _seenCount = _allMessages.length;
+    if (_selfId != 0) {
+      await _storage.write(key: 'seen_messages_$_selfId', value: _seenCount.toString());
+    }
+    notifyListeners();
+  }
 
   int get _selfId => _selfIdCache ?? 0;
   int? _selfIdCache;
@@ -37,6 +50,20 @@ class MessageProvider extends ChangeNotifier {
     notifyListeners();
     try {
       _allMessages = await _service.fetchMessages();
+      
+      if (_selfId != 0) {
+        final savedSeen = await _storage.read(key: 'seen_messages_$_selfId');
+        if (savedSeen != null) {
+          _seenCount = int.tryParse(savedSeen) ?? 0;
+        }
+      }
+
+      if (_allMessages.length < _seenCount) {
+        _seenCount = _allMessages.length;
+        if (_selfId != 0) {
+          await _storage.write(key: 'seen_messages_$_selfId', value: _seenCount.toString());
+        }
+      }
       // print('DEBUG: Fetched ${_allMessages.length} total messages. SelfID: $_selfId');
     } catch (e) {
       _error = 'Failed to load conversations';

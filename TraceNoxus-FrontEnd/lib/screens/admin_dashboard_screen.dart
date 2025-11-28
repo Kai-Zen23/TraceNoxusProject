@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../screens/user_list_screen.dart';
-import '../screens/user_profile_screen.dart';
+import '../screens/profile_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/settings_screen.dart'; // Import SettingsScreen
 import '../providers/admin_provider.dart';
@@ -18,11 +18,6 @@ class AdminDashboardScreen extends StatefulWidget {
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   int _selectedIndex = 0;
   bool _isDarkMode = false; // Mock Dark Mode state
-
-  final List<Widget> _screens = [
-    const UserListScreen(),
-    const UserProfileScreen(),
-  ];
 
   void _toggleTheme() {
     setState(() {
@@ -85,9 +80,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
         ],
       ),
-      body: _selectedIndex == 0 
-          ? AdminHomeTab(isDarkMode: _isDarkMode, onNavigate: (index) => setState(() => _selectedIndex = index))
-          : _screens[_selectedIndex - 1],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: [
+          AdminHomeTab(isDarkMode: _isDarkMode, onNavigate: (index) => setState(() => _selectedIndex = index)),
+          const UserListScreen(),
+          const ProfileScreen(),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) {
@@ -134,24 +134,8 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         Provider.of<AdminProvider>(context, listen: false).fetchDashboardStats();
-        Provider.of<NotificationProvider>(context, listen: false).fetchNotifications();
       }
     });
-  }
-
-  String _formatTime(DateTime time) {
-    final now = DateTime.now();
-    final difference = now.difference(time);
-
-    if (difference.inMinutes < 1) {
-      return 'Just now';
-    } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
-    } else {
-      return '${difference.inDays}d ago';
-    }
   }
 
   @override
@@ -227,71 +211,28 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
           const SizedBox(height: 24),
 
           // Notifications Panel
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Notifications',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
-                ),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pushNamed(context, '/notifications'),
-                child: const Text('View All'),
-              ),
-            ],
+          Text(
+            'Announcement',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
           ),
-          const SizedBox(height: 8),
-          Consumer<NotificationProvider>(
-            builder: (context, notificationProvider, child) {
-              if (notificationProvider.isLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (notificationProvider.error != null) {
-                return Text('Error: ${notificationProvider.error}', style: const TextStyle(color: Colors.red));
-              }
-              if (notificationProvider.notifications.isEmpty) {
-                return Card(
-                  color: cardColor,
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Center(child: Text('No recent notifications', style: TextStyle(color: textColor))),
-                  ),
-                );
-              }
-
-              // Show top 3 notifications
-              final recentNotifications = notificationProvider.notifications.take(3).toList();
-
-              return Card(
-                color: cardColor,
-                elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                child: Column(
-                  children: recentNotifications.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final notification = entry.value;
-                    return Column(
-                      children: [
-                        _buildNotificationItem(
-                          notification.title,
-                          _formatTime(notification.createdAt), 
-                          Icons.notifications,
-                          Colors.blue,
-                          textColor,
-                        ),
-                        if (index < recentNotifications.length - 1) const Divider(height: 1),
-                      ],
-                    );
-                  }).toList(),
-                ),
-              );
-            },
+          const SizedBox(height: 16),
+          Card(
+            color: cardColor,
+            elevation: 2,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Column(
+              children: [
+                _buildNotificationItem('New user registration: @john_doe', '2 mins ago', Icons.person_add, Colors.blue, textColor),
+                const Divider(height: 1),
+                _buildNotificationItem('System warning: High CPU usage', '1 hour ago', Icons.warning, Colors.amber, textColor),
+                const Divider(height: 1),
+                _buildNotificationItem('Report flagged: Post #402', '3 hours ago', Icons.flag, Colors.red, textColor),
+              ],
+            ),
           ),
           const SizedBox(height: 24),
 
@@ -313,13 +254,14 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
             mainAxisSpacing: 16,
             childAspectRatio: 1.5,
             children: [
+              _buildActionCard(context, icon: Icons.notifications, title: 'Send Notification', color: Colors.orangeAccent, cardColor: cardColor, textColor: textColor, onTap: () => _showCreateNotificationDialog(context)),
               _buildActionCard(context, icon: Icons.people, title: 'Manage Users', color: Colors.blue, cardColor: cardColor, textColor: textColor, onTap: () => widget.onNavigate(1)),
               _buildActionCard(context, icon: Icons.event, title: 'Events', color: Colors.teal, cardColor: cardColor, textColor: textColor, onTap: () => Navigator.pushNamed(context, '/calendar')),
-              _buildActionCard(context, icon: Icons.notifications, title: 'Notifications', color: Colors.orange, cardColor: cardColor, textColor: textColor, onTap: () => Navigator.pushNamed(context, '/notifications')),
+              _buildActionCard(context, icon: Icons.analytics, title: 'Analytics', color: Colors.green, cardColor: cardColor, textColor: textColor, onTap: () => _showComingSoon(context)),
               _buildActionCard(context, icon: Icons.admin_panel_settings, title: 'Roles & Perms', color: Colors.indigo, cardColor: cardColor, textColor: textColor, onTap: () => _showComingSoon(context)),
               _buildActionCard(context, icon: Icons.history, title: 'Audit Logs', color: Colors.brown, cardColor: cardColor, textColor: textColor, onTap: () => _showComingSoon(context)),
               _buildActionCard(context, icon: Icons.download, title: 'Export Data', color: Colors.deepOrange, cardColor: cardColor, textColor: textColor, onTap: () => _showComingSoon(context)),
-              _buildActionCard(context, icon: Icons.analytics, title: 'Analytics', color: Colors.green, cardColor: cardColor, textColor: textColor, onTap: () => _showComingSoon(context)),
+              _buildActionCard(context, icon: Icons.report, title: 'Reports', color: Colors.purple, cardColor: cardColor, textColor: textColor, onTap: () => _showComingSoon(context)),
               _buildActionCard(context, icon: Icons.settings, title: 'Settings', color: Colors.grey, cardColor: cardColor, textColor: textColor, onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
               }),
@@ -426,6 +368,78 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showCreateNotificationDialog(BuildContext context) {
+    final titleController = TextEditingController();
+    final contentController = TextEditingController();
+    bool isLoading = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Send Notification'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(labelText: 'Title', hintText: 'Enter notification title'),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: contentController,
+                decoration: const InputDecoration(labelText: 'Message', hintText: 'Enter notification message'),
+                maxLines: 3,
+              ),
+              if (isLoading) const Padding(padding: EdgeInsets.only(top: 16), child: CircularProgressIndicator()),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      if (titleController.text.isEmpty || contentController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please fill in all fields')),
+                        );
+                        return;
+                      }
+
+                      setState(() => isLoading = true);
+                      try {
+                        await Provider.of<NotificationProvider>(context, listen: false)
+                            .sendNotification(titleController.text, contentController.text);
+                        if (mounted) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Notification sent successfully!')),
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to send notification: $e')),
+                          );
+                        }
+                      } finally {
+                        if (mounted) {
+                          setState(() => isLoading = false);
+                        }
+                      }
+                    },
+              child: const Text('Push'),
+            ),
+          ],
         ),
       ),
     );

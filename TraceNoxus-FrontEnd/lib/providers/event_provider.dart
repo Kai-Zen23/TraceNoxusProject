@@ -1,16 +1,35 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
 import '../models/event_model.dart';
 import '../services/event_service.dart';
 
 class EventProvider with ChangeNotifier {
   final EventService _eventService = EventService();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
   List<EventModel> _events = [];
   bool _isLoading = false;
   String? _error;
 
+  int _seenCount = 0;
+  String? _userId;
+
   List<EventModel> get events => _events;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  
+  int get badgeCount => (_events.length - _seenCount).clamp(0, _events.length);
+
+  void setUserId(int id) {
+    _userId = id.toString();
+  }
+
+  Future<void> markAsSeen() async {
+    _seenCount = _events.length;
+    if (_userId != null) {
+      await _storage.write(key: 'seen_events_$_userId', value: _seenCount.toString());
+    }
+    notifyListeners();
+  }
 
   Future<void> fetchEvents() async {
     _isLoading = true;
@@ -19,6 +38,20 @@ class EventProvider with ChangeNotifier {
 
     try {
       _events = await _eventService.fetchEvents();
+      
+      if (_userId != null) {
+        final savedSeen = await _storage.read(key: 'seen_events_$_userId');
+        if (savedSeen != null) {
+          _seenCount = int.tryParse(savedSeen) ?? 0;
+        }
+      }
+
+      if (_events.length < _seenCount) {
+        _seenCount = _events.length;
+        if (_userId != null) {
+          await _storage.write(key: 'seen_events_$_userId', value: _seenCount.toString());
+        }
+      }
     } catch (e) {
       _error = e.toString();
     } finally {

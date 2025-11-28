@@ -195,7 +195,7 @@ class AuthService {
       }
 
       final response = await _dio.get(
-        '$_baseUrl/api/user/',
+        '$_baseUrl/api/me/',
         options: Options(
           headers: {'Authorization': 'Bearer $token'},
         ),
@@ -237,7 +237,7 @@ class AuthService {
     }
 
     final response = await _dio.patch(
-      '$_baseUrl/api/user/',
+      '$_baseUrl/api/me/',
       data: formData,
       options: Options(
         headers: {
@@ -253,7 +253,7 @@ class AuthService {
     final token = await getToken();
     if (token == null) throw Exception('User not authenticated');
     await _dio.delete(
-      '$_baseUrl/api/user/',
+      '$_baseUrl/api/me/',
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
   }

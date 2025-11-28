@@ -1,4 +1,3 @@
-// dart; path: d:\Software Engineering Project\TraceNoxusProject\TraceNoxus-FrontEnd\lib\providers\friend_requests_provider.dart
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -13,11 +12,27 @@ class FriendRequestsProvider extends ChangeNotifier {
   String? _error;
   List<Map<String, dynamic>> _incoming = [];
   List<Map<String, dynamic>> _outgoing = [];
+  int _seenCount = 0;
+  String? _userId;
 
   bool get isLoading => _isLoading;
   String? get error => _error;
   List<Map<String, dynamic>> get incoming => _incoming;
   List<Map<String, dynamic>> get outgoing => _outgoing;
+  
+  int get badgeCount => (_incoming.length - _seenCount).clamp(0, _incoming.length);
+
+  void setUserId(int id) {
+    _userId = id.toString();
+  }
+
+  Future<void> markAsSeen() async {
+    _seenCount = _incoming.length;
+    if (_userId != null) {
+      await _storage.write(key: 'seen_friends_$_userId', value: _seenCount.toString());
+    }
+    notifyListeners();
+  }
 
   Future<String?> _token() async => _storage.read(key: 'token');
 
@@ -27,6 +42,20 @@ class FriendRequestsProvider extends ChangeNotifier {
     notifyListeners();
     try {
       await Future.wait([_loadIncoming(), _loadOutgoing()]);
+      
+      if (_userId != null) {
+        final savedSeen = await _storage.read(key: 'seen_friends_$_userId');
+        if (savedSeen != null) {
+          _seenCount = int.tryParse(savedSeen) ?? 0;
+        }
+      }
+
+      if (_incoming.length < _seenCount) {
+        _seenCount = _incoming.length;
+        if (_userId != null) {
+          await _storage.write(key: 'seen_friends_$_userId', value: _seenCount.toString());
+        }
+      }
     } catch (e) {
       _error = 'Failed to load friend requests';
     }

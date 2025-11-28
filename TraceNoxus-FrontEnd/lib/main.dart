@@ -11,7 +11,9 @@ import 'providers/user_provider.dart';
 import 'providers/admin_provider.dart';
 import 'providers/event_provider.dart';
 import 'providers/notification_provider.dart';
+import 'providers/announcement_provider.dart'; //add
 import 'screens/admin_dashboard_screen.dart';
+import 'screens/announcement_screen.dart'; //add
 import 'screens/calendar_screen.dart';
 import 'screens/create_event_screen.dart';
 import 'screens/chat_screen.dart';
@@ -51,6 +53,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AdminProvider()),
         ChangeNotifierProvider(create: (_) => EventProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => AnnouncementProvider()), //add
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -78,6 +81,7 @@ class MyApp extends StatelessWidget {
           '/Initial': (context) => const InitialScreenWrapper(), //add
           '/general-chat': (context) => const GeneralChatScreen(),
           '/teams': (context) => const TeamsScreen(),
+          '/announcement': (context) => const AnnouncementScreen(), //add
         },
       ),
     );

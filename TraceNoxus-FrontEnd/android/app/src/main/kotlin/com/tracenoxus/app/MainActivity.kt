@@ -1,4 +1,4 @@
-package com.example.newbago
+package com.tracenoxus.app
 
 import io.flutter.embedding.android.FlutterActivity
 
