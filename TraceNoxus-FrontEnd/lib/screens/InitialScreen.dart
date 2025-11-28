@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:TraceNoxus/providers/auth_provider.dart';
 import 'package:TraceNoxus/screens/welcome.dart';
 import 'package:TraceNoxus/screens/login_screen.dart';
-import 'package:TraceNoxus/screens/welcome.dart';
+
 
 class InitialScreenWrapper extends StatefulWidget {
   const InitialScreenWrapper({Key? key}) : super(key: key);

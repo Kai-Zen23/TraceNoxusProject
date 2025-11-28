@@ -34,17 +34,25 @@ subprojects {
 
 // Ensure all Android modules compile against Java 17 and Kotlin JVM 17
 subprojects { proj ->
-    def androidExt = proj.extensions.findByName('android')
-    if (androidExt != null) {
-        androidExt.compileOptions {
-            sourceCompatibility JavaVersion.VERSION_17
-            targetCompatibility JavaVersion.VERSION_17
+    def configure = {
+        def androidExt = proj.extensions.findByName('android')
+        if (androidExt != null) {
+            androidExt.compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
+            }
+        }
+        proj.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach { task ->
+            task.kotlinOptions {
+                jvmTarget = '17'
+            }
         }
     }
-    proj.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach { task ->
-        task.kotlinOptions {
-            jvmTarget = '17'
-        }
+
+    if (proj.state.executed) {
+        configure()
+    } else {
+        proj.afterEvaluate(configure)
     }
     proj.tasks.withType(JavaCompile).configureEach { task ->
         task.sourceCompatibility = JavaVersion.VERSION_17
@@ -54,4 +62,4 @@ subprojects { proj ->
 
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
-} 
+}

@@ -74,10 +74,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 backgroundColor: Colors.grey[200],
                 backgroundImage: _imageFile != null
                     ? FileImage(_imageFile!)
-                    : (user?.profileImageUrl.isNotEmpty == true
-                        ? NetworkImage(user!.profileImageUrl)
+                    : (user?.profileImageUrl != null && user!.profileImageUrl!.isNotEmpty
+                        ? NetworkImage(user!.profileImageUrl!)
                         : null) as ImageProvider?,
-                child: (user == null || (user.profileImageUrl.isEmpty && _imageFile == null))
+                child: (user == null || user.profileImageUrl == null || user.profileImageUrl!.isEmpty) && _imageFile == null
                     ? const Icon(Icons.person, size: 48, color: Colors.grey)
                     : null,
               ),
@@ -271,4 +271,4 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             ),
     );
   }
-} 
+}

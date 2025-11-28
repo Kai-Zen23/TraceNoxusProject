@@ -1,6 +1,10 @@
 class AppConstants {
   //static const String baseUrl = 'http://192.168.1.24:8000';
   static const String baseUrl = 'https://tracenoxus.onrender.com';
+  //static const String baseUrl = 'http://10.0.2.2:8000'; // Local Android Emulator
+  //static const String baseUrl = 'http://10.0.0.105:8000'; // Local IP Address
+  //static const String baseUrl = 'http://127.0.0.1:8000'; // Localhost
+  
   // Routes
   static const String loginRoute = '/login';
   static const String registerRoute = '/register';
@@ -15,4 +19,4 @@ class AppConstants {
   static const String registerError = 'Failed to register';
   static const String noTokenError = 'No token found';
   static const String profileError = 'Failed to get profile';
-} 
+}

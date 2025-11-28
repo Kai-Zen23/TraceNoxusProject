@@ -1,140 +1,84 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../core/constants/app_constants.dart';
-import '../models/user_model.dart';
 
 class AdminService {
   final Dio _dio = Dio();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
-  
-  static const String _baseUrl = AppConstants.baseUrl;
+  // final String? _baseUrl = dotenv.env['API_URL'];
 
-  Future<String?> getToken() async {
+  AdminService() {
+    _dio.options.baseUrl = AppConstants.baseUrl;
+    _dio.options.connectTimeout = const Duration(seconds: 5);
+    _dio.options.receiveTimeout = const Duration(seconds: 3);
+  }
+
+  Future<String?> _getToken() async {
     return await _storage.read(key: 'token');
   }
 
-  // Get all users (admin only)
-  Future<Map<String, dynamic>> getAllUsers({
-    String? role,
-    bool? isVerified,
-    bool? isSuperuser,
-    bool? isActive,
-  }) async {
+  Future<Map<String, dynamic>> getDashboardStats() async {
     try {
-      final token = await getToken();
+      final token = await _getToken();
       if (token == null) {
-        throw Exception('User not authenticated');
+        return {'error': 'No token found'};
       }
 
-      final queryParams = <String, dynamic>{};
-      if (role != null) queryParams['role'] = role;
-      if (isVerified != null) queryParams['is_verified'] = isVerified.toString();
-      if (isSuperuser != null) queryParams['is_superuser'] = isSuperuser.toString();
-      if (isActive != null) queryParams['is_active'] = isActive.toString();
-
+      // UserListView returns stats in the response
       final response = await _dio.get(
-        '$_baseUrl/api/users/',
-        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+        '/api/users/',
         options: Options(
-          headers: {'Authorization': 'Bearer $token'},
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
         ),
       );
-      return response.data;
-    } on DioException catch (e) {
-      if (e.response?.data is Map) {
-        throw Exception(e.response?.data['error'] ?? 'Failed to fetch users');
+
+      if (response.statusCode == 200) {
+        return response.data; // Contains total_users, verified_users, etc.
+      } else {
+        return {'error': 'Failed to fetch stats: ${response.statusCode}'};
       }
-      throw Exception('Failed to fetch users: ${e.message}');
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return {'error': e.response?.data['detail'] ?? 'Server error'};
+      }
+      return {'error': 'Connection error: ${e.message}'};
+    } catch (e) {
+      return {'error': 'Unexpected error: $e'};
     }
   }
 
-  // Get user by ID (admin only)
-  Future<UserModel> getUserById(int userId) async {
-    try {
-      final token = await getToken();
-      if (token == null) {
-        throw Exception('User not authenticated');
-      }
-
-      final response = await _dio.get(
-        '$_baseUrl/api/users/$userId/',
-        options: Options(
-          headers: {'Authorization': 'Bearer $token'},
-        ),
-      );
-      return UserModel.fromJson(response.data);
-    } on DioException catch (e) {
-      if (e.response?.data is Map) {
-        throw Exception(e.response?.data['error'] ?? 'Failed to fetch user');
-      }
-      throw Exception('Failed to fetch user: ${e.message}');
-    }
+  Future<Map<String, dynamic>> getAllUsers() async {
+    return getDashboardStats(); // Reusing the same endpoint as it returns user list + stats
   }
 
-  // Update user (admin only)
-  Future<UserModel> updateUser(
-    int userId, {
-    String? username,
-    String? firstName,
-    String? lastName,
-    String? role,
-    bool? isVerified,
-    bool? isActive,
-    bool? isStaff,
-    bool? isSuperuser,
-  }) async {
-    try {
-      final token = await getToken();
-      if (token == null) {
-        throw Exception('User not authenticated');
-      }
-
-      final data = <String, dynamic>{};
-      if (username != null) data['username'] = username;
-      if (firstName != null) data['first_name'] = firstName;
-      if (lastName != null) data['last_name'] = lastName;
-      if (role != null) data['role'] = role;
-      if (isVerified != null) data['is_verified'] = isVerified;
-      if (isActive != null) data['is_active'] = isActive;
-      if (isStaff != null) data['is_staff'] = isStaff;
-      if (isSuperuser != null) data['is_superuser'] = isSuperuser;
-
-      final response = await _dio.patch(
-        '$_baseUrl/api/users/$userId/',
-        data: data,
-        options: Options(
-          headers: {'Authorization': 'Bearer $token'},
-        ),
-      );
-      return UserModel.fromJson(response.data);
-    } on DioException catch (e) {
-      if (e.response?.data is Map) {
-        throw Exception(e.response?.data['error'] ?? 'Failed to update user');
-      }
-      throw Exception('Failed to update user: ${e.message}');
-    }
-  }
-
-  // Delete user (admin only)
   Future<void> deleteUser(int userId) async {
     try {
-      final token = await getToken();
+      final token = await _getToken();
       if (token == null) {
-        throw Exception('User not authenticated');
+        throw Exception('No token found');
       }
 
-      await _dio.delete(
-        '$_baseUrl/api/users/$userId/',
+      final response = await _dio.delete(
+        '/api/users/$userId/',
         options: Options(
-          headers: {'Authorization': 'Bearer $token'},
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
         ),
       );
-    } on DioException catch (e) {
-      if (e.response?.data is Map) {
-        throw Exception(e.response?.data['error'] ?? 'Failed to delete user');
+
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception('Failed to delete user: ${response.statusCode}');
       }
-      throw Exception('Failed to delete user: ${e.message}');
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['detail'] ?? 'Server error: ${e.message}');
+    } catch (e) {
+      throw Exception('Unexpected error: $e');
     }
   }
 }
-
