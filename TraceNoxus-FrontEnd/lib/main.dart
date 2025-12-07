@@ -11,11 +11,16 @@ import 'providers/user_provider.dart';
 import 'providers/admin_provider.dart';
 import 'providers/event_provider.dart';
 import 'providers/notification_provider.dart';
+import 'providers/announcement_provider.dart'; //add
+import 'providers/user_management_provider.dart';
+import 'providers/team_provider.dart';
+import 'providers/highlight_provider.dart';
 import 'screens/admin_dashboard_screen.dart';
+import 'screens/announcement_screen.dart'; //add
 import 'screens/calendar_screen.dart';
 import 'screens/create_event_screen.dart';
 import 'screens/chat_screen.dart';
-import 'screens/dashboard.dart';
+// import 'screens/dashboard.dart'; 
 import 'screens/friend_requests_screen.dart';
 import 'screens/friends_screen.dart';
 import 'screens/general_chat_screen.dart';
@@ -26,6 +31,7 @@ import 'screens/register_screen.dart';
 import 'screens/teams_screen.dart';
 import 'screens/user_home_screen.dart';
 import 'screens/welcome.dart';
+import 'screens/user_management_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,6 +57,10 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AdminProvider()),
         ChangeNotifierProvider(create: (_) => EventProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => AnnouncementProvider()), //add
+        ChangeNotifierProvider(create: (_) => UserManagementProvider()),
+        ChangeNotifierProvider(create: (_) => TeamProvider()),
+        ChangeNotifierProvider(create: (_) => HighlightProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -78,6 +88,8 @@ class MyApp extends StatelessWidget {
           '/Initial': (context) => const InitialScreenWrapper(), //add
           '/general-chat': (context) => const GeneralChatScreen(),
           '/teams': (context) => const TeamsScreen(),
+          '/announcement': (context) => const AnnouncementScreen(), //add
+          '/user-management': (context) => const UserManagementScreen(),
         },
       ),
     );

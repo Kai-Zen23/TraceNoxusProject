@@ -6,6 +6,7 @@ class UserModel {
   final String? firstName;
   final String? lastName;
   final bool isVerified;
+  final bool? isStaff; // Added for correct admin check
   final DateTime? dateJoined;
   final DateTime? lastLogin;
   // Legacy fields for backward compatibility
@@ -25,6 +26,7 @@ class UserModel {
     this.firstName,
     this.lastName,
     required this.isVerified,
+    this.isStaff,
     this.dateJoined,
     this.lastLogin,
     this.name,
@@ -45,6 +47,7 @@ class UserModel {
       firstName: json['first_name'] as String?,
       lastName: json['last_name'] as String?,
       isVerified: json['is_verified'] as bool? ?? false,
+      isStaff: json['is_staff'] as bool?,
       dateJoined: json['date_joined'] != null
           ? DateTime.parse(json['date_joined'] as String)
           : null,
@@ -70,6 +73,7 @@ class UserModel {
       'first_name': firstName,
       'last_name': lastName,
       'is_verified': isVerified,
+      'is_staff': isStaff,
       'date_joined': dateJoined?.toIso8601String(),
       'last_login': lastLogin?.toIso8601String(),
       'profile_image': profileImageUrl,

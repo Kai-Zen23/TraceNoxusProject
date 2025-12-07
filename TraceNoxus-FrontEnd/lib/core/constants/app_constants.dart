@@ -3,12 +3,13 @@ class AppConstants {
   static const String baseUrl = 'https://tracenoxus.onrender.com';
   //static const String baseUrl = 'http://10.0.2.2:8000'; // Local Android Emulator
   //static const String baseUrl = 'http://10.0.0.105:8000'; // Local IP Address
-  //static const String baseUrl = 'http://127.0.0.1:8000'; // Localhost
+
   
   // Routes
   static const String loginRoute = '/login';
   static const String registerRoute = '/register';
   static const String homeRoute = '/home';
+  static const String highlightRoute = '/highlight';
   
   // Storage Keys
   static const String accessTokenKey = 'access_token';

@@ -1,12 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../providers/auth_provider.dart';
 import '../screens/user_list_screen.dart';
-import '../screens/user_profile_screen.dart';
+import '../screens/profile_screen.dart';
 import '../screens/login_screen.dart';
-import '../screens/settings_screen.dart'; // Import SettingsScreen
+import '../screens/settings_screen.dart'; 
 import '../providers/admin_provider.dart';
 import '../providers/notification_provider.dart';
+import '../providers/highlight_provider.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({Key? key}) : super(key: key);
@@ -15,20 +18,21 @@ class AdminDashboardScreen extends StatefulWidget {
   State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
 }
 
+
+
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   int _selectedIndex = 0;
-  bool _isDarkMode = false; // Mock Dark Mode state
+  bool _isDarkMode = false;
 
-  final List<Widget> _screens = [
-    const UserListScreen(),
-    const UserProfileScreen(),
-  ];
+  // Mock Dark Mode state
 
   void _toggleTheme() {
     setState(() {
       _isDarkMode = !_isDarkMode;
     });
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -48,13 +52,40 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       );
     }
 
+
     return Scaffold(
       backgroundColor: _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFD3E3EA),
       appBar: AppBar(
-        title: const Text('Admin Dashboard'),
+        title: const Text(''),
         backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : const Color(0xFF2B4267),
         foregroundColor: Colors.white,
         actions: [
+          // Role Mode Switch (Admin only)
+          if (authProvider.canSwitchRoles)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Row(
+                children: [
+                  Text(
+                    authProvider.isInUserMode ? 'User Mode' : 'Admin Mode',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(width: 8),
+                  Switch(
+                    value: !authProvider.isInUserMode,
+                    onChanged: (isAdmin) {
+                      if (isAdmin) {
+                        _switchToAdminMode(context, authProvider);
+                      } else {
+                        _showSwitchToUserDialog(context, authProvider);
+                      }
+                    },
+                    activeColor: Colors.green,
+                    inactiveThumbColor: Colors.blue,
+                  ),
+                ],
+              ),
+            ),
           IconButton(
             icon: Icon(_isDarkMode ? Icons.light_mode : Icons.dark_mode),
             onPressed: _toggleTheme,
@@ -85,9 +116,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
         ],
       ),
-      body: _selectedIndex == 0 
-          ? AdminHomeTab(isDarkMode: _isDarkMode, onNavigate: (index) => setState(() => _selectedIndex = index))
-          : _screens[_selectedIndex - 1],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: [
+          AdminHomeTab(isDarkMode: _isDarkMode, onNavigate: (index) => setState(() => _selectedIndex = index)),
+          const UserListScreen(),
+          const ProfileScreen(),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) {
@@ -115,6 +151,59 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       ),
     );
   }
+
+  // Role switching helper methods
+  void _showSwitchToUserDialog(BuildContext context, AuthProvider authProvider) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Switch to User Mode?'),
+        content: const Text(
+          'You will experience the app as a normal user. '
+          'Admin features will be hidden. You can switch back to Admin Mode at any time from the toggle.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await authProvider.switchToUserMode();
+
+              if (context.mounted) {
+                // Navigate to user dashboard
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/user-home',
+                  (route) => false,
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+            ),
+            child: const Text('Switch to User Mode'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _switchToAdminMode(BuildContext context, AuthProvider authProvider) async {
+    await authProvider.switchToAdminMode();
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Switched back to Admin Mode'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
 }
 
 class AdminHomeTab extends StatefulWidget {
@@ -134,31 +223,15 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         Provider.of<AdminProvider>(context, listen: false).fetchDashboardStats();
-        Provider.of<NotificationProvider>(context, listen: false).fetchNotifications();
       }
     });
-  }
-
-  String _formatTime(DateTime time) {
-    final now = DateTime.now();
-    final difference = now.difference(time);
-
-    if (difference.inMinutes < 1) {
-      return 'Just now';
-    } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
-    } else {
-      return '${difference.inDays}d ago';
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final adminProvider = Provider.of<AdminProvider>(context);
-    final user = authProvider.currentUser;
+    // Removed unused user variable
     final textColor = widget.isDarkMode ? Colors.white : Colors.black87;
     final cardColor = widget.isDarkMode ? const Color(0xFF1E293B) : Colors.white;
 
@@ -189,6 +262,16 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
             style: TextStyle(color: textColor),
           ),
           const SizedBox(height: 24),
+
+
+          Text(
+            'Admin Dashboard',
+            style: TextStyle(
+              fontSize: 40,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
+          ),
 
           // System Status Snapshot
           Text(
@@ -226,75 +309,6 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
             ),
           const SizedBox(height: 24),
 
-          // Notifications Panel
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Notifications',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
-                ),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pushNamed(context, '/notifications'),
-                child: const Text('View All'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Consumer<NotificationProvider>(
-            builder: (context, notificationProvider, child) {
-              if (notificationProvider.isLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (notificationProvider.error != null) {
-                return Text('Error: ${notificationProvider.error}', style: const TextStyle(color: Colors.red));
-              }
-              if (notificationProvider.notifications.isEmpty) {
-                return Card(
-                  color: cardColor,
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Center(child: Text('No recent notifications', style: TextStyle(color: textColor))),
-                  ),
-                );
-              }
-
-              // Show top 3 notifications
-              final recentNotifications = notificationProvider.notifications.take(3).toList();
-
-              return Card(
-                color: cardColor,
-                elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                child: Column(
-                  children: recentNotifications.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final notification = entry.value;
-                    return Column(
-                      children: [
-                        _buildNotificationItem(
-                          notification.title,
-                          _formatTime(notification.createdAt), 
-                          Icons.notifications,
-                          Colors.blue,
-                          textColor,
-                        ),
-                        if (index < recentNotifications.length - 1) const Divider(height: 1),
-                      ],
-                    );
-                  }).toList(),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 24),
-
           // Quick Actions
           Text(
             'Quick Actions',
@@ -313,13 +327,16 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
             mainAxisSpacing: 16,
             childAspectRatio: 1.5,
             children: [
-              _buildActionCard(context, icon: Icons.people, title: 'Manage Users', color: Colors.blue, cardColor: cardColor, textColor: textColor, onTap: () => widget.onNavigate(1)),
+              _buildActionCard(context, icon: Icons.notifications, title: 'Send Notification', color: Colors.orangeAccent, cardColor: cardColor, textColor: textColor, onTap: () => _showCreateNotificationDialog(context)),
+              _buildActionCard(context, icon: Icons.video_library, title: 'Manage Highlights', color: Colors.deepPurple, cardColor: cardColor, textColor: textColor, onTap: () => _showUploadHighlightOptions(context)),
+              _buildActionCard(context, icon: Icons.people, title: 'Manage Users', color: Colors.blue, cardColor: cardColor, textColor: textColor, onTap: () => Navigator.pushNamed(context, '/user-management')),
+              _buildActionCard(context, icon: Icons.groups, title: 'Manage Teams', color: Colors.redAccent, cardColor: cardColor, textColor: textColor, onTap: () => Navigator.pushNamed(context, '/teams')),
               _buildActionCard(context, icon: Icons.event, title: 'Events', color: Colors.teal, cardColor: cardColor, textColor: textColor, onTap: () => Navigator.pushNamed(context, '/calendar')),
-              _buildActionCard(context, icon: Icons.notifications, title: 'Notifications', color: Colors.orange, cardColor: cardColor, textColor: textColor, onTap: () => Navigator.pushNamed(context, '/notifications')),
+              _buildActionCard(context, icon: Icons.analytics, title: 'Analytics', color: Colors.green, cardColor: cardColor, textColor: textColor, onTap: () => _showComingSoon(context)),
               _buildActionCard(context, icon: Icons.admin_panel_settings, title: 'Roles & Perms', color: Colors.indigo, cardColor: cardColor, textColor: textColor, onTap: () => _showComingSoon(context)),
               _buildActionCard(context, icon: Icons.history, title: 'Audit Logs', color: Colors.brown, cardColor: cardColor, textColor: textColor, onTap: () => _showComingSoon(context)),
               _buildActionCard(context, icon: Icons.download, title: 'Export Data', color: Colors.deepOrange, cardColor: cardColor, textColor: textColor, onTap: () => _showComingSoon(context)),
-              _buildActionCard(context, icon: Icons.analytics, title: 'Analytics', color: Colors.green, cardColor: cardColor, textColor: textColor, onTap: () => _showComingSoon(context)),
+              _buildActionCard(context, icon: Icons.report, title: 'Reports', color: Colors.purple, cardColor: cardColor, textColor: textColor, onTap: () => _showComingSoon(context)),
               _buildActionCard(context, icon: Icons.settings, title: 'Settings', color: Colors.grey, cardColor: cardColor, textColor: textColor, onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
               }),
@@ -375,22 +392,7 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
     );
   }
 
-  Widget _buildNotificationItem(String message, String time, IconData icon, Color iconColor, Color textColor) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: iconColor.withOpacity(0.1),
-        child: Icon(icon, color: iconColor, size: 20),
-      ),
-      title: Text(
-        message,
-        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: textColor),
-      ),
-      trailing: Text(
-        time,
-        style: TextStyle(fontSize: 12, color: textColor.withOpacity(0.5)),
-      ),
-    );
-  }
+
 
   Widget _buildActionCard(
     BuildContext context, {
@@ -431,9 +433,256 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
     );
   }
 
+  void _showCreateNotificationDialog(BuildContext context) {
+    final titleController = TextEditingController();
+    final contentController = TextEditingController();
+    bool isLoading = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Send Notification'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(labelText: 'Title', hintText: 'Enter notification title'),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: contentController,
+                decoration: const InputDecoration(labelText: 'Message', hintText: 'Enter notification message'),
+                maxLines: 3,
+              ),
+              if (isLoading) const Padding(padding: EdgeInsets.only(top: 16), child: CircularProgressIndicator()),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      if (titleController.text.isEmpty || contentController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please fill in all fields')),
+                        );
+                        return;
+                      }
+
+                      setState(() => isLoading = true);
+                      try {
+                        await Provider.of<NotificationProvider>(context, listen: false)
+                            .sendNotification(titleController.text, contentController.text);
+                        if (mounted) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Notification sent successfully!')),
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to send notification: $e')),
+                          );
+                        }
+                      } finally {
+                        if (mounted) {
+                          setState(() => isLoading = false);
+                        }
+                      }
+                    },
+              child: const Text('Push'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showComingSoon(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Feature coming soon!')),
     );
+  }
+
+  // Highlights Logic
+  void _showUploadHighlightOptions(BuildContext context) {
+     showModalBottomSheet(
+       context: context,
+       backgroundColor: const Color(0xFF1E293B),
+       shape: const RoundedRectangleBorder(
+         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+       ),
+       builder: (context) => Column(
+         mainAxisSize: MainAxisSize.min,
+         children: [
+           ListTile(
+             leading: const Icon(Icons.video_library, color: Colors.blue),
+             title: const Text('Upload from Gallery', style: TextStyle(color: Colors.white)),
+             onTap: () {
+               Navigator.pop(context);
+               _pickVideoFromGallery();
+             },
+           ),
+           ListTile(
+             leading: const Icon(Icons.link, color: Colors.green),
+             title: const Text('Add via URL', style: TextStyle(color: Colors.white)),
+             onTap: () {
+               Navigator.pop(context);
+               _showUrlUploadDialog();
+             },
+           ),
+           const SizedBox(height: 16),
+         ],
+       ),
+     );
+  }
+
+  Future<void> _pickVideoFromGallery() async {
+    try {
+      final picker = ImagePicker();
+      final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
+      
+      if (video != null && mounted) {
+        final TextEditingController titleController = TextEditingController();
+        String selectedCategory = 'Game Highlights';
+        
+        await showDialog(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Upload Highlight'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(labelText: 'Video Title'),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: selectedCategory,
+                  items: ['Game Highlights', 'Tournament Videos', 'Interview Videos']
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
+                  onChanged: (val) => selectedCategory = val!,
+                  decoration: const InputDecoration(labelText: 'Category'),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (titleController.text.isNotEmpty) {
+                    Navigator.pop(dialogContext); // Close dialog
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Uploading video...')),
+                    );
+                    
+                    final error = await Provider.of<HighlightProvider>(context, listen: false)
+                        .uploadHighlight(
+                          videoFile: File(video.path),
+                          title: titleController.text,
+                          category: selectedCategory,
+                        );
+                        
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(error == null ? 'Upload successful!' : error)),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Upload'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error picking video: $e');
+      if (mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(content: Text('Error picking video. Please try again.')),
+         );
+      }
+    }
+  }
+
+  Future<void> _showUrlUploadDialog() async {
+      final TextEditingController titleController = TextEditingController();
+      final TextEditingController urlController = TextEditingController();
+      String selectedCategory = 'Game Highlights';
+
+      await showDialog(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Add Highlight Link'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(labelText: 'Video Title'),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: urlController,
+                  decoration: const InputDecoration(labelText: 'Video URL (e.g. Cloudinary)'),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: selectedCategory,
+                  items: ['Game Highlights', 'Tournament Videos', 'Interview Videos']
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
+                  onChanged: (val) => selectedCategory = val!,
+                  decoration: const InputDecoration(labelText: 'Category'),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (titleController.text.isNotEmpty && urlController.text.isNotEmpty) {
+                    Navigator.pop(dialogContext); // Close dialog
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Adding video link...')),
+                    );
+                    
+                    final error = await Provider.of<HighlightProvider>(context, listen: false)
+                        .uploadHighlight(
+                          videoUrl: urlController.text.trim(),
+                          title: titleController.text,
+                          category: selectedCategory,
+                        );
+                        
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(error == null ? 'Link added!' : error)),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Add'),
+              ),
+            ],
+          ),
+        );
   }
 }

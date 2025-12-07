@@ -2,12 +2,16 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:video_player/video_player.dart';
-import 'package:chewie/chewie.dart';
-import 'package:visibility_detector/visibility_detector.dart';
 import '../providers/user_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/friend_requests_provider.dart';
+import '../providers/message_provider.dart';
+import '../providers/event_provider.dart';
+import '../providers/notification_provider.dart';
+import '../widgets/highlights_section.dart';
 import 'profile_screen.dart';
+import '../providers/highlight_provider.dart';
+
 
 class UserHomeScreen extends StatefulWidget {
   const UserHomeScreen({super.key});
@@ -19,60 +23,242 @@ class UserHomeScreen extends StatefulWidget {
 class _UserHomeScreenState extends State<UserHomeScreen> {
   final TextEditingController _nameController = TextEditingController();
   XFile? _pickedImage;
-  VideoPlayerController? _videoPlayerController;
-  ChewieController? _chewieController;
+  // Video controllers removed as they are now managed by HighlightsSection
 
   @override
   void initState() {
     super.initState();
-    _initializePlayer();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<UserProvider>(context, listen: false).loadUserData();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final context = this.context;
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      await userProvider.loadUserData();
+      
+      final userId = userProvider.user?.id;
+      if (userId != null) {
+        final friendRequestsProvider = Provider.of<FriendRequestsProvider>(context, listen: false);
+        friendRequestsProvider.setUserId(userId);
+        friendRequestsProvider.refresh();
+
+        final messageProvider = Provider.of<MessageProvider>(context, listen: false);
+        messageProvider.loadAllConversations();
+
+        final eventProvider = Provider.of<EventProvider>(context, listen: false);
+        eventProvider.setUserId(userId);
+        eventProvider.fetchEvents();
+
+        final notificationProvider = Provider.of<NotificationProvider>(context, listen: false);
+        notificationProvider.setUserId(userId);
+        notificationProvider.fetchNotifications();
+      }
     });
   }
 
-  Future<void> _initializePlayer() async {
+  bool _isPickingVideo = false;
+
+  void _showUploadOptions() {
+     showModalBottomSheet(
+       context: context,
+       backgroundColor: const Color(0xFF1E293B),
+       shape: const RoundedRectangleBorder(
+         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+       ),
+       builder: (context) => Column(
+         mainAxisSize: MainAxisSize.min,
+         children: [
+           ListTile(
+             leading: const Icon(Icons.video_library, color: Colors.blue),
+             title: const Text('Upload from Gallery', style: TextStyle(color: Colors.white)),
+             onTap: () {
+               Navigator.pop(context);
+               _pickVideoFromGallery();
+             },
+           ),
+           ListTile(
+             leading: const Icon(Icons.link, color: Colors.green),
+             title: const Text('Add via URL', style: TextStyle(color: Colors.white)),
+             onTap: () {
+               Navigator.pop(context);
+               _showUrlUploadDialog();
+             },
+           ),
+           const SizedBox(height: 16),
+         ],
+       ),
+     );
+  }
+
+  Future<void> _pickVideoFromGallery() async {
+    if (_isPickingVideo) return;
+
+    setState(() {
+      _isPickingVideo = true;
+    });
+
     try {
-      _videoPlayerController = VideoPlayerController.networkUrl(
-        Uri.parse(
-            'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4'),
-      );
-      await _videoPlayerController!.initialize();
-      _chewieController = ChewieController(
-        videoPlayerController: _videoPlayerController!,
-        autoPlay: false,
-        looping: true,
-        aspectRatio: _videoPlayerController!.value.aspectRatio,
-        errorBuilder: (context, errorMessage) {
-          return Center(
-            child: Text(
-              errorMessage,
-              style: const TextStyle(color: Colors.white),
+      final picker = ImagePicker();
+      final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
+      
+      if (video != null && mounted) {
+        final TextEditingController titleController = TextEditingController();
+        String selectedCategory = 'Game Highlights';
+        
+        await showDialog(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Upload Highlight'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(labelText: 'Video Title'),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: selectedCategory,
+                  items: ['Game Highlights', 'Tournament Videos', 'Interview Videos']
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
+                  onChanged: (val) => selectedCategory = val!,
+                  decoration: const InputDecoration(labelText: 'Category'),
+                ),
+              ],
             ),
-          );
-        },
-      );
-      if (mounted) setState(() {});
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (titleController.text.isNotEmpty) {
+                    Navigator.pop(dialogContext); // Close dialog using dialogContext
+                    
+                    // Show loading using outer context
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Uploading video...')),
+                    );
+                    
+                    // Use outer context for Provider as well
+                    final error = await Provider.of<HighlightProvider>(context, listen: false)
+                        .uploadHighlight(
+                          videoFile: File(video.path),
+                          title: titleController.text,
+                          category: selectedCategory,
+                        );
+                        
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(error == null ? 'Upload proper!' : error)),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Upload'),
+              ),
+            ],
+          ),
+        );
+      }
     } catch (e) {
-      print('Error initializing video player: $e');
+      debugPrint('Error picking video: $e');
+      if (mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(content: Text('Error picking video. Please try again.')),
+         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPickingVideo = false;
+        });
+      }
     }
+  }
+
+  Future<void> _showUrlUploadDialog() async {
+      final TextEditingController titleController = TextEditingController();
+      final TextEditingController urlController = TextEditingController();
+      String selectedCategory = 'Game Highlights';
+
+      await showDialog(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Add Highlight Link'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(labelText: 'Video Title'),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: urlController,
+                  decoration: const InputDecoration(labelText: 'Video URL (e.g. Cloudinary)'),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: selectedCategory,
+                  items: ['Game Highlights', 'Tournament Videos', 'Interview Videos']
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
+                  onChanged: (val) => selectedCategory = val!,
+                  decoration: const InputDecoration(labelText: 'Category'),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (titleController.text.isNotEmpty && urlController.text.isNotEmpty) {
+                    Navigator.pop(dialogContext); // Close dialog
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Adding video link...')),
+                    );
+                    
+                    final error = await Provider.of<HighlightProvider>(context, listen: false)
+                        .uploadHighlight(
+                          videoUrl: urlController.text.trim(),
+                          title: titleController.text,
+                          category: selectedCategory,
+                        );
+                        
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(error == null ? 'Link added!' : error)),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Add'),
+              ),
+            ],
+          ),
+        );
   }
 
   @override
   void dispose() {
-    _videoPlayerController?.dispose();
-    _chewieController?.dispose();
     _nameController.dispose();
     super.dispose();
   }
 
   void _openFriends() => Navigator.pushNamed(context, '/friends');
 
+  void _openFriendquest() => Navigator.pushNamed(context, '/friend-requests');
+
   void _openMessages() => Navigator.pushNamed(context, '/messages');
 
   void _openCalendar() => Navigator.pushNamed(context, '/calendar');
 
   void _openNotifications() => Navigator.pushNamed(context, '/notifications');
+
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -106,6 +292,12 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
     }
   }
+  
+  Future<void> _switchToAdminMode(BuildContext context, AuthProvider authProvider) async {
+    await authProvider.switchToAdminMode();
+    if (!mounted) return;
+    Navigator.pushNamedAndRemoveUntil(context, '/admin', (route) => false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -124,13 +316,13 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                   Container(color: const Color(0xFF0F172A)),
             ),
           ),
+
           SafeArea(
             child: Column(
               children: [
                 // Header
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                   child: Row(
                     children: [
                       const Text(
@@ -139,13 +331,37 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                           color: Colors.white,
                           fontSize: 24,
                           fontWeight: FontWeight.w800,
-                          fontFamily: 'Serif', // Or custom font
+                          fontFamily: 'Serif',
                         ),
                       ),
                       const Spacer(),
+
+                      // Role mode toggle for admins in user mode
+                      Consumer<AuthProvider>(
+                        builder: (context, authProvider, child) {
+                          if (authProvider.canSwitchRoles && authProvider.isInUserMode) {
+                            return Row(
+                              children: [
+                                const Text('', style: TextStyle(color: Colors.white70, fontSize: 5)),
+                                const SizedBox(width: 4),
+                                Switch(
+                                  value: false,
+                                  onChanged: (value) {
+                                    if (value) _switchToAdminMode(context, authProvider);
+                                  },
+                                  activeColor: Colors.green,
+                                  inactiveThumbColor: Colors.blue,
+                                ),
+                              ],
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                      // Friend Requests Button moved to bottom nav
+                      const SizedBox(width: 8),
                       IconButton(
-                        icon: const Icon(
-                            Icons.search, color: Colors.white, size: 28),
+                        icon: const Icon(Icons.search, color: Colors.white, size: 28),
                         onPressed: () {},
                       ),
                       const SizedBox(width: 8),
@@ -153,8 +369,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(
-                                builder: (context) => const ProfileScreen()),
+                            MaterialPageRoute(builder: (context) => const ProfileScreen()),
                           );
                         },
                         child: CircleAvatar(
@@ -164,8 +379,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                               ? NetworkImage(user!.profileImageUrl!)
                               : null,
                           child: user?.profileImageUrl == null
-                              ? const Icon(Icons.person, size: 20, color: Colors
-                              .white)
+                              ? const Icon(Icons.person_3_outlined, size: 20, color: Colors.white)
                               : null,
                         ),
                       ),
@@ -180,54 +394,17 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                       children: [
                         const SizedBox(height: 20),
                         
-                        const Text(
-                          'Highlights',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                          ),
+                        // New Highlights Section
+                        Consumer<AuthProvider>(
+                          builder: (context, auth, _) {
+                            final isAdmin = auth.user?.role == 'admin' || auth.user?.isStaff == true;
+                            return HighlightsSection(
+                              isAdmin: isAdmin,
+                              onUpload: _showUploadOptions, // Updated callback
+                            );
+                          },
                         ),
-                        const SizedBox(height: 16),
-
-                        // Video Player Section
-                        Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 24),
-                          height: 220,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(24),
-                            color: Colors.black,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.5),
-                                blurRadius: 10,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: _chewieController != null &&
-                              _chewieController!.videoPlayerController.value
-                                  .isInitialized
-                              ? VisibilityDetector(
-                            key: const Key('video-player-visibility'),
-                            onVisibilityChanged: (info) {
-                              if (info.visibleFraction > 0.5) {
-                                if (!_videoPlayerController!.value.isPlaying) {
-                                  _videoPlayerController!.play();
-                                }
-                              } else {
-                                if (_videoPlayerController!.value.isPlaying) {
-                                  _videoPlayerController!.pause();
-                                }
-                              }
-                            },
-                            child: Chewie(controller: _chewieController!),
-                          )
-                              : const Center(
-                              child: CircularProgressIndicator()),
-                        ),
+                        
                         const SizedBox(height: 100), // Space for bottom nav
                       ],
                     ),
@@ -263,11 +440,58 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildNavItem(
-                      Icons.chat_bubble_outline, 'Message', _openMessages),
-                  _buildNavItem(Icons.calendar_today, 'Events', _openCalendar),
-                  _buildNavItem(Icons.notifications_none, 'Notifications',
-                      _openNotifications),
+                  Consumer<FriendRequestsProvider>(
+                    builder: (context, provider, child) {
+                      return _buildNavItem(
+                        Icons.person,
+                        'Friend Request',
+                        () {
+                          provider.markAsSeen();
+                          _openFriendquest();
+                        },
+                        badgeCount: provider.badgeCount,
+                      );
+                    },
+                  ),
+                  Consumer<MessageProvider>(
+                    builder: (context, provider, child) {
+                      return _buildNavItem(
+                        Icons.chat_bubble_outline,
+                        'Message',
+                        () {
+                          provider.markAsSeen();
+                          _openMessages();
+                        },
+                        badgeCount: provider.badgeCount,
+                      );
+                    },
+                  ),
+                  Consumer<EventProvider>(
+                    builder: (context, provider, child) {
+                      return _buildNavItem(
+                        Icons.calendar_today,
+                        'Events',
+                        () {
+                          provider.markAsSeen();
+                          _openCalendar();
+                        },
+                        badgeCount: provider.badgeCount,
+                      );
+                    },
+                  ),
+                  Consumer<NotificationProvider>(
+                    builder: (context, provider, child) {
+                      return _buildNavItem(
+                        Icons.announcement,
+                        'Announcement',
+                        () {
+                          provider.markAsSeen();
+                          _openNotifications();
+                        },
+                        badgeCount: provider.badgeCount,
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -277,19 +501,50 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, VoidCallback onTap) {
+  Widget _buildNavItem(IconData icon, String label, VoidCallback onTap,
+      {int? badgeCount}) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.pinkAccent.withOpacity(0.2), // Highlight color
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: Colors.white, size: 24),
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.pinkAccent.withOpacity(0.2), // Highlight color
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: Colors.white, size: 24),
+              ),
+              if (badgeCount != null && badgeCount > 0)
+                Positioned(
+                  right: -4,
+                  top: -4,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      '$badgeCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 4),
           Text(

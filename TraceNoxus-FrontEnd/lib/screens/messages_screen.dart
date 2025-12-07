@@ -54,12 +54,12 @@ class _MessagesScreenState extends State<MessagesScreen> {
     final allUsers = friendProvider.allUsers.where((u) {
       final isNotMe = u['id'] != auth.currentUser?.id;
       if (!isNotMe) return false;
-      
+
       if (_searchQuery.isEmpty) return true;
-      
+
       final username = (u['username'] ?? '').toString().toLowerCase();
       final email = (u['email'] ?? '').toString().toLowerCase();
-      
+
       return username.contains(_searchQuery) || email.contains(_searchQuery);
     }).toList();
 
@@ -74,7 +74,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
               errorBuilder: (_, __, ___) => Container(color: const Color(0xFF1A1A1A)),
             ),
           ),
-          
+
           SafeArea(
             child: Column(
               children: [
@@ -135,9 +135,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Horizontal User List (Filtered)
                 if (allUsers.isNotEmpty)
                   SizedBox(
@@ -186,125 +186,125 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     ),
                   )
                 else if (_searchQuery.isNotEmpty)
-                   const Padding(
-                     padding: EdgeInsets.all(16.0),
-                     child: Text("No users found", style: TextStyle(color: Colors.white54)),
-                   ),
+                  const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text("No users found", style: TextStyle(color: Colors.white54)),
+                  ),
 
                 const SizedBox(height: 10),
-                
+
                 // Vertical Conversation List
                 Expanded(
                   child: msgProvider.isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          itemCount: msgProvider.conversations.length,
-                          itemBuilder: (context, index) {
-                            final convo = msgProvider.conversations[index];
-                            final otherId = convo['otherId'] as int;
-                            final lastMsg = convo['last'] as String;
-                            
-                            // Find user details
-                            final user = friendProvider.allUsers.firstWhere(
-                              (u) => u['id'] == otherId,
-                              orElse: () => {'username': 'User $otherId', 'email': '', 'id': otherId},
-                            );
-                            final name = (user['username'] ?? user['email'] ?? 'User $otherId').toString().toUpperCase();
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: msgProvider.conversations.length,
+                    itemBuilder: (context, index) {
+                      final convo = msgProvider.conversations[index];
+                      final otherId = convo['otherId'] as int;
+                      final lastMsg = convo['last'] as String;
 
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              child: GestureDetector(
-                                onLongPress: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (ctx) => AlertDialog(
-                                      title: const Text('Delete Conversation'),
-                                      content: Text('Are you sure you want to delete the entire conversation with $name?'),
-                                      actions: [
-                                        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-                                        TextButton(
-                                          onPressed: () {
-                                            msgProvider.deleteConversation(otherId);
-                                            Navigator.pop(ctx);
-                                          },
-                                          child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                                        ),
-                                      ],
+                      // Find user details
+                      final user = friendProvider.allUsers.firstWhere(
+                            (u) => u['id'] == otherId,
+                        orElse: () => {'username': 'User $otherId', 'email': '', 'id': otherId},
+                      );
+                      final name = (user['username'] ?? user['email'] ?? 'User $otherId').toString().toUpperCase();
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: GestureDetector(
+                          onLongPress: () {
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text('Delete Conversation'),
+                                content: Text('Are you sure you want to delete the entire conversation with $name?'),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                                  TextButton(
+                                    onPressed: () {
+                                      msgProvider.deleteConversation(otherId);
+                                      Navigator.pop(ctx);
+                                    },
+                                    child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.push(context, MaterialPageRoute(
+                                  builder: (_) => ChatScreen(otherUserId: otherId)
+                              )).then((_) {
+                                if (context.mounted) {
+                                  Provider.of<MessageProvider>(context, listen: false).loadAllConversations();
+                                }
+                              });
+                            },
+                            child: Row(
+                              children: [
+                                GestureDetector(
+                                  onTap: () => _showProfileOptions(context, user, friendProvider),
+                                  child: Container(
+                                    width: 50,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF3A8FB7),
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
-                                  );
-                                },
-                                child: InkWell(
-                                  onTap: () {
-                                    Navigator.push(context, MaterialPageRoute(
-                                      builder: (_) => ChatScreen(otherUserId: otherId)
-                                    )).then((_) {
-                                      if (context.mounted) {
-                                        Provider.of<MessageProvider>(context, listen: false).loadAllConversations();
-                                      }
-                                    });
-                                  },
-                                  child: Row(
+                                    child: const Icon(Icons.person, color: Colors.white),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      GestureDetector(
-                                        onTap: () => _showProfileOptions(context, user, friendProvider),
-                                        child: Container(
-                                          width: 50,
-                                          height: 50,
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF3A8FB7),
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          child: const Icon(Icons.person, color: Colors.white),
+                                      Text(
+                                        name,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
                                         ),
                                       ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              name,
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              lastMsg,
                                               style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 14,
+                                                color: Colors.white70,
+                                                fontSize: 12,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          if (convo['timestamp'] != null)
+                                            Padding(
+                                              padding: const EdgeInsets.only(left: 8),
+                                              child: Text(
+                                                DateFormat('h:mm a').format((convo['timestamp'] as DateTime).toUtc().add(const Duration(hours: 8))),
+                                                style: const TextStyle(color: Colors.white54, fontSize: 10),
                                               ),
                                             ),
-                                            const SizedBox(height: 4),
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: Text(
-                                                    lastMsg,
-                                                    style: const TextStyle(
-                                                      color: Colors.white70,
-                                                      fontSize: 12,
-                                                    ),
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                                if (convo['timestamp'] != null)
-                                                  Padding(
-                                                    padding: const EdgeInsets.only(left: 8),
-                                                    child: Text(
-                                                      DateFormat('h:mm a').format((convo['timestamp'] as DateTime).toUtc().add(const Duration(hours: 8))),
-                                                      style: const TextStyle(color: Colors.white54, fontSize: 10),
-                                                    ),
-                                                  ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
+                                        ],
                                       ),
                                     ],
                                   ),
                                 ),
-                              ),
-                            );
-                          },
+                              ],
+                            ),
+                          ),
                         ),
+                      );
+                    },
+                  ),
                 ),
 
                 // Bottom Navigation Bar
@@ -320,7 +320,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.people, color: Colors.white, size: 30),
-                        onPressed: () {}, // Already on Messages
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/teams');
+                          }, // Already on Messages
                       ),
                       IconButton(
                         icon: const Icon(Icons.public, color: Colors.white70, size: 30),

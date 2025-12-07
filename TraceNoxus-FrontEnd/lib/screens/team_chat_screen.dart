@@ -4,6 +4,7 @@ import 'package:TraceNoxus/models/user_model.dart';
 import 'package:TraceNoxus/providers/auth_provider.dart';
 import 'package:TraceNoxus/providers/friend_provider.dart';
 import 'package:TraceNoxus/providers/room_chat_provider.dart';
+import 'other_user_profile_screen.dart';
 
 class TeamChatScreen extends StatefulWidget {
   const TeamChatScreen({required this.config, super.key});
@@ -18,20 +19,34 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
+  late RoomChatProvider _chatProvider;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      context
-          .read<FriendProvider>()
-          .loadAllUsers(); // ensure avatars have display names
-      context.read<RoomChatProvider>().load(room: widget.config.channelId);
+      context.read<FriendProvider>().loadAllUsers();
+      
+      final chat = context.read<RoomChatProvider>();
+      // Load history first
+      await chat.load(room: widget.config.channelId);
+      // Then connect websocket
+      if (mounted) {
+        chat.connect(room: widget.config.channelId);
+      }
     });
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _chatProvider = context.read<RoomChatProvider>();
+  }
+
+  @override
   void dispose() {
+    _chatProvider.disconnect();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -116,6 +131,15 @@ class _ChatListView extends StatelessWidget {
   final AuthProvider auth;
   final ScrollController scrollController;
 
+  void _showProfile(BuildContext context, Map<String, dynamic> user) {
+    // If it's me, maybe show my profile? For now, do nothing or show standard profile
+    // But usually this feature is for OTHER users
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => OtherUserProfileScreen(user: user)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (chat.isLoading) {
@@ -145,7 +169,7 @@ class _ChatListView extends StatelessWidget {
         final fallback = 'User ${message.sender}';
         final friend = friends.allUsers.firstWhere(
           (u) => u['id'] == message.sender,
-          orElse: () => {'username': fallback},
+          orElse: () => {'username': fallback, 'id': message.sender},
         );
         final displayName =
             (message.senderName ?? friend['username'] ?? fallback).toString();
@@ -166,12 +190,17 @@ class _ChatListView extends StatelessWidget {
               crossAxisAlignment:
                   isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
-                Text(
-                  displayName,
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                GestureDetector(
+                  onTap: () {
+                     if (!isMe) _showProfile(context, friend);
+                  },
+                  child: Text(
+                    displayName,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 4),

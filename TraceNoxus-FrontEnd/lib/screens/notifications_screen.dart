@@ -159,7 +159,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       ),
                       const SizedBox(width: 8),
                       const Text(
-                        'Notifications',
+                        'ANNOUNCEMENT',
                         style: TextStyle(
                           color: Color(0xFF88AEC9),
                           fontSize: 22,
