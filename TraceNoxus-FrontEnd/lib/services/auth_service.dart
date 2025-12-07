@@ -8,7 +8,7 @@ class AuthService {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   
   // Centralized base URL
-  static const String _baseUrl = AppConstants.baseUrl;
+  static final String _baseUrl = AppConstants.baseUrl;
 
   Future<bool> ping() async {
     try {

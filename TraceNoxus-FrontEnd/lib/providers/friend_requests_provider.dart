@@ -6,7 +6,7 @@ import '../core/constants/app_constants.dart';
 class FriendRequestsProvider extends ChangeNotifier {
   final Dio _dio = Dio();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
-  static const String _baseUrl = AppConstants.baseUrl;
+  static final String _baseUrl = AppConstants.baseUrl;
 
   bool _isLoading = false;
   String? _error;
@@ -111,3 +111,4 @@ class FriendRequestsProvider extends ChangeNotifier {
     await refresh();
   }
 }
+

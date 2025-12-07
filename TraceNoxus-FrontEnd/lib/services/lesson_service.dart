@@ -5,7 +5,7 @@ import '../core/constants/app_constants.dart';
 
 class LessonService {
   final Dio _dio = Dio();
-  static const String _baseUrl = AppConstants.baseUrl;
+  static final String _baseUrl = AppConstants.baseUrl;
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
   Future<String?> getToken() async {

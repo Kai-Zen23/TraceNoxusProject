@@ -49,6 +49,7 @@ dependencies:
   chewie: ^1.7.1
   visibility_detector: ^0.4.0+2
   google_fonts: ^6.1.0
+  mime: ^2.0.0
 
 
 dev_dependencies:
@@ -65,16 +66,16 @@ dev_dependencies:
 
 flutter_native_splash:
   color: "#ffffff"
-  image: "assets/image/image.png"
+  image: "assets/image/icon2.png"
   android: true
   ios: true
 
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/image/Charactergirl.png"
-  adaptive_icon_background: "#ffffff"
-  adaptive_icon_foreground: "assets/image/Charactergirl.png"
+  image_path: "assets/image/icon2.png"
+  adaptive_icon_background: "#000000"
+  adaptive_icon_foreground: "assets/image/icon2.png"
 
 # The "flutter_lints" package below contains a set of recommended lints to
 # encourage good coding practices. The lint set provided by the package is
@@ -90,6 +91,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/image/
+    - assets/video/
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

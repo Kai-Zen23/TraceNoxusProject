@@ -5,7 +5,7 @@ import '../core/constants/app_constants.dart';
 class FriendService {
   final Dio _dio = Dio();
   final _storage = const FlutterSecureStorage();
-  static const String _baseUrl = AppConstants.baseUrl;
+  static final String _baseUrl = AppConstants.baseUrl;
 
   Future<String?> _token() => _storage.read(key: 'token');
 

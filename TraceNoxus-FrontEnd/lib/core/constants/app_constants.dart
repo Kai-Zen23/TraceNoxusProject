@@ -9,6 +9,7 @@ class AppConstants {
   static const String loginRoute = '/login';
   static const String registerRoute = '/register';
   static const String homeRoute = '/home';
+  static const String highlightRoute = '/highlight';
   
   // Storage Keys
   static const String accessTokenKey = 'access_token';

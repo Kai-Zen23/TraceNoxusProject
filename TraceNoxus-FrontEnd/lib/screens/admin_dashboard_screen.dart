@@ -1,13 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../providers/auth_provider.dart';
 import '../screens/user_list_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/login_screen.dart';
-import '../screens/settings_screen.dart'; // Import SettingsScreen
+import '../screens/settings_screen.dart'; 
 import '../providers/admin_provider.dart';
 import '../providers/notification_provider.dart';
-import '../providers/auth_provider.dart';
+import '../providers/highlight_provider.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({Key? key}) : super(key: key);
@@ -54,7 +56,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Scaffold(
       backgroundColor: _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFD3E3EA),
       appBar: AppBar(
-        title: const Text('Admin Dashboard'),
+        title: const Text(''),
         backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : const Color(0xFF2B4267),
         foregroundColor: Colors.white,
         actions: [
@@ -229,7 +231,7 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final adminProvider = Provider.of<AdminProvider>(context);
-    final user = authProvider.currentUser;
+    // Removed unused user variable
     final textColor = widget.isDarkMode ? Colors.white : Colors.black87;
     final cardColor = widget.isDarkMode ? const Color(0xFF1E293B) : Colors.white;
 
@@ -260,6 +262,16 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
             style: TextStyle(color: textColor),
           ),
           const SizedBox(height: 24),
+
+
+          Text(
+            'Admin Dashboard',
+            style: TextStyle(
+              fontSize: 40,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
+          ),
 
           // System Status Snapshot
           Text(
@@ -297,32 +309,6 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
             ),
           const SizedBox(height: 24),
 
-          // Notifications Panel
-          Text(
-            'Announcement',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: textColor,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            color: cardColor,
-            elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: Column(
-              children: [
-                _buildNotificationItem('New user registration: @john_doe', '2 mins ago', Icons.person_add, Colors.blue, textColor),
-                const Divider(height: 1),
-                _buildNotificationItem('System warning: High CPU usage', '1 hour ago', Icons.warning, Colors.amber, textColor),
-                const Divider(height: 1),
-                _buildNotificationItem('Report flagged: Post #402', '3 hours ago', Icons.flag, Colors.red, textColor),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-
           // Quick Actions
           Text(
             'Quick Actions',
@@ -342,7 +328,9 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
             childAspectRatio: 1.5,
             children: [
               _buildActionCard(context, icon: Icons.notifications, title: 'Send Notification', color: Colors.orangeAccent, cardColor: cardColor, textColor: textColor, onTap: () => _showCreateNotificationDialog(context)),
-              _buildActionCard(context, icon: Icons.people, title: 'Manage Users', color: Colors.blue, cardColor: cardColor, textColor: textColor, onTap: () => widget.onNavigate(1)),
+              _buildActionCard(context, icon: Icons.video_library, title: 'Manage Highlights', color: Colors.deepPurple, cardColor: cardColor, textColor: textColor, onTap: () => _showUploadHighlightOptions(context)),
+              _buildActionCard(context, icon: Icons.people, title: 'Manage Users', color: Colors.blue, cardColor: cardColor, textColor: textColor, onTap: () => Navigator.pushNamed(context, '/user-management')),
+              _buildActionCard(context, icon: Icons.groups, title: 'Manage Teams', color: Colors.redAccent, cardColor: cardColor, textColor: textColor, onTap: () => Navigator.pushNamed(context, '/teams')),
               _buildActionCard(context, icon: Icons.event, title: 'Events', color: Colors.teal, cardColor: cardColor, textColor: textColor, onTap: () => Navigator.pushNamed(context, '/calendar')),
               _buildActionCard(context, icon: Icons.analytics, title: 'Analytics', color: Colors.green, cardColor: cardColor, textColor: textColor, onTap: () => _showComingSoon(context)),
               _buildActionCard(context, icon: Icons.admin_panel_settings, title: 'Roles & Perms', color: Colors.indigo, cardColor: cardColor, textColor: textColor, onTap: () => _showComingSoon(context)),
@@ -404,22 +392,7 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
     );
   }
 
-  Widget _buildNotificationItem(String message, String time, IconData icon, Color iconColor, Color textColor) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: iconColor.withOpacity(0.1),
-        child: Icon(icon, color: iconColor, size: 20),
-      ),
-      title: Text(
-        message,
-        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: textColor),
-      ),
-      trailing: Text(
-        time,
-        style: TextStyle(fontSize: 12, color: textColor.withOpacity(0.5)),
-      ),
-    );
-  }
+
 
   Widget _buildActionCard(
     BuildContext context, {
@@ -536,5 +509,180 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Feature coming soon!')),
     );
+  }
+
+  // Highlights Logic
+  void _showUploadHighlightOptions(BuildContext context) {
+     showModalBottomSheet(
+       context: context,
+       backgroundColor: const Color(0xFF1E293B),
+       shape: const RoundedRectangleBorder(
+         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+       ),
+       builder: (context) => Column(
+         mainAxisSize: MainAxisSize.min,
+         children: [
+           ListTile(
+             leading: const Icon(Icons.video_library, color: Colors.blue),
+             title: const Text('Upload from Gallery', style: TextStyle(color: Colors.white)),
+             onTap: () {
+               Navigator.pop(context);
+               _pickVideoFromGallery();
+             },
+           ),
+           ListTile(
+             leading: const Icon(Icons.link, color: Colors.green),
+             title: const Text('Add via URL', style: TextStyle(color: Colors.white)),
+             onTap: () {
+               Navigator.pop(context);
+               _showUrlUploadDialog();
+             },
+           ),
+           const SizedBox(height: 16),
+         ],
+       ),
+     );
+  }
+
+  Future<void> _pickVideoFromGallery() async {
+    try {
+      final picker = ImagePicker();
+      final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
+      
+      if (video != null && mounted) {
+        final TextEditingController titleController = TextEditingController();
+        String selectedCategory = 'Game Highlights';
+        
+        await showDialog(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Upload Highlight'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(labelText: 'Video Title'),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: selectedCategory,
+                  items: ['Game Highlights', 'Tournament Videos', 'Interview Videos']
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
+                  onChanged: (val) => selectedCategory = val!,
+                  decoration: const InputDecoration(labelText: 'Category'),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (titleController.text.isNotEmpty) {
+                    Navigator.pop(dialogContext); // Close dialog
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Uploading video...')),
+                    );
+                    
+                    final error = await Provider.of<HighlightProvider>(context, listen: false)
+                        .uploadHighlight(
+                          videoFile: File(video.path),
+                          title: titleController.text,
+                          category: selectedCategory,
+                        );
+                        
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(error == null ? 'Upload successful!' : error)),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Upload'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error picking video: $e');
+      if (mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(content: Text('Error picking video. Please try again.')),
+         );
+      }
+    }
+  }
+
+  Future<void> _showUrlUploadDialog() async {
+      final TextEditingController titleController = TextEditingController();
+      final TextEditingController urlController = TextEditingController();
+      String selectedCategory = 'Game Highlights';
+
+      await showDialog(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Add Highlight Link'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(labelText: 'Video Title'),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: urlController,
+                  decoration: const InputDecoration(labelText: 'Video URL (e.g. Cloudinary)'),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: selectedCategory,
+                  items: ['Game Highlights', 'Tournament Videos', 'Interview Videos']
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
+                  onChanged: (val) => selectedCategory = val!,
+                  decoration: const InputDecoration(labelText: 'Category'),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (titleController.text.isNotEmpty && urlController.text.isNotEmpty) {
+                    Navigator.pop(dialogContext); // Close dialog
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Adding video link...')),
+                    );
+                    
+                    final error = await Provider.of<HighlightProvider>(context, listen: false)
+                        .uploadHighlight(
+                          videoUrl: urlController.text.trim(),
+                          title: titleController.text,
+                          category: selectedCategory,
+                        );
+                        
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(error == null ? 'Link added!' : error)),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Add'),
+              ),
+            ],
+          ),
+        );
   }
 }
