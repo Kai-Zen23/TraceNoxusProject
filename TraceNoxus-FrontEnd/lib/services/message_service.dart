@@ -6,7 +6,7 @@ import '../models/message_model.dart';
 
 class MessageService {
   final Dio _dio = Dio();
-  static const String _baseUrl = AppConstants.baseUrl;
+  static final String _baseUrl = AppConstants.baseUrl;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   Future<String?> _getToken() async {

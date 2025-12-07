@@ -1,4 +1,3 @@
-// dart; path: d:\Software Engineering Project\TraceNoxusProject\TraceNoxus-FrontEnd\lib\screens\friend_requests_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/friend_requests_provider.dart';
@@ -27,7 +26,7 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
         children: [
           Positioned.fill(
             child: Image.asset(
-              'assets/image/backgrounduser.png',
+              'assets/image/background_user.png',
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => Container(color: const Color(0xFF1A1A1A)),
             ),
@@ -105,6 +104,7 @@ class _RequestsList extends StatelessWidget {
   final void Function(int id)? onReject;
 
   const _RequestsList({
+    super.key,
     required this.items,
     required this.showActions,
     this.onAccept,
@@ -123,13 +123,14 @@ class _RequestsList extends StatelessWidget {
       itemBuilder: (context, index) {
         final r = items[index];
         final id = r['id'] as int;
-        final sender = r['sender']?.toString() ?? '';
-        final receiver = r['receiver']?.toString() ?? '';
+        // Use username if available, fallback to ID, then 'Unknown'
+        final sender = r['sender_username']?.toString() ?? r['sender']?.toString() ?? 'Unknown';
+        final receiver = r['receiver_username']?.toString() ?? r['receiver']?.toString() ?? 'Unknown';
         final status = r['status']?.toString() ?? 'pending';
+        
         return ListTile(
           leading: const Icon(Icons.person_add, color: Colors.white),
-          title: Text('From $sender → To $receiver', style: const TextStyle(color: Colors.white)),
-          subtitle: Text(status, style: const TextStyle(color: Colors.white70)),
+          title: Text(showActions ? sender : receiver, style: const TextStyle(color: Colors.white)),
           trailing: showActions && status == 'pending'
               ? Row(
             mainAxisSize: MainAxisSize.min,

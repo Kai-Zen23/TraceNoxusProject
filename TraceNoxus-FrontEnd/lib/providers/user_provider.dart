@@ -33,6 +33,10 @@ class UserProvider extends ChangeNotifier {
     required String name,
     int? age,
     dynamic profileImageFile, // File? type, but dynamic for now
+    String? gamesPlayed,
+    String? competitiveLevel,
+    String? preferredRoles,
+    bool removeProfileImage = false,
   }) async {
     _isLoading = true;
     _error = null;
@@ -42,6 +46,10 @@ class UserProvider extends ChangeNotifier {
         name: name,
         age: age,
         profileImageFile: profileImageFile,
+        gamesPlayed: gamesPlayed,
+        competitiveLevel: competitiveLevel,
+        preferredRoles: preferredRoles,
+        removeProfileImage: removeProfileImage,
       );
       _user = UserModel.fromJson(response);
     } catch (e) {
@@ -66,4 +74,4 @@ class UserProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-} 
+}

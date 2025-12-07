@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:TraceNoxus/providers/room_chat_provider.dart';
 import 'package:TraceNoxus/providers/friend_provider.dart';
 import 'package:TraceNoxus/providers/auth_provider.dart';
+import 'other_user_profile_screen.dart';
 
 class GeneralChatScreen extends StatefulWidget {
   const GeneralChatScreen({super.key});
@@ -41,6 +42,13 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
     super.dispose();
   }
 
+  void _showProfile(BuildContext context, Map<String, dynamic> user) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => OtherUserProfileScreen(user: user)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<RoomChatProvider>(context);
@@ -49,7 +57,7 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          Positioned.fill(child: Image.asset('assets/image/backgrounduser.png', fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: const Color(0xFF1A1A1A)))),
+          Positioned.fill(child: Image.asset('assets/image/background_user.png', fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: const Color(0xFF1A1A1A)))),
           SafeArea(
             child: Column(
               children: [
@@ -75,7 +83,7 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
                       final isMe = auth.currentUser?.id != null && m.sender == auth.currentUser!.id;
                       final user = friends.allUsers.firstWhere(
                         (u) => u['id'] == m.sender,
-                        orElse: () => {'username': 'User ${m.sender}'}
+                        orElse: () => {'username': 'User ${m.sender}', 'id': m.sender}
                       );
                       final displayName = (m.senderName ?? user['username'] ?? user['email'] ?? 'User ${m.sender}').toString();
                       return Padding(
@@ -85,19 +93,27 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
                           mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
                           children: [
                             if (!isMe)
-                              CircleAvatar(
-                                radius: 16,
-                                backgroundColor: const Color(0xFF2E5E88),
-                                child: Text(displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
-                                    style: const TextStyle(color: Colors.white)),
+                              GestureDetector(
+                                onTap: () => _showProfile(context, user),
+                                child: CircleAvatar(
+                                  radius: 16,
+                                  backgroundColor: const Color(0xFF2E5E88),
+                                  child: Text(displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
+                                      style: const TextStyle(color: Colors.white)),
+                                ),
                               ),
                             const SizedBox(width: 8),
                             Flexible(
                               child: Column(
                                 crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                                 children: [
-                                  Text(displayName,
-                                      style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                                  GestureDetector(
+                                    onTap: () {
+                                       if (!isMe) _showProfile(context, user);
+                                    },
+                                    child: Text(displayName,
+                                        style: const TextStyle(color: Colors.white70, fontSize: 10)),
+                                  ),
                                   const SizedBox(height: 2),
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

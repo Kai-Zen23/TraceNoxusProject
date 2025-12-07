@@ -1,9 +1,8 @@
 import 'dart:math' as math;
-import 'package:TraceNoxus/screens/register_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
-// import '../widgets/custom_text_field.dart';
+import '../widgets/custom_text_field.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 
@@ -160,17 +159,16 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(authProvider.error ?? 'Login failed'),
+            content: Text(authProvider.error ?? 'Login failed. Please check your credentials.'),
             backgroundColor: Colors.red,
           ),
         );
       } else if (mounted) {
         // Redirect based on user role (RBAC pattern)
         if (authProvider.isAdmin) {
-          Navigator.pushReplacementNamed(context, '/admin');
+          Navigator.pushNamedAndRemoveUntil(context, '/admin', (route) => false);
         } else {
-          // Redirect to user home screen if not admin
-          Navigator.pushReplacementNamed(context, '/user-home');
+          Navigator.pushNamedAndRemoveUntil(context, '/user-home', (route) => false);
         }
       }
     }
@@ -207,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // Background Image Layer
           Positioned.fill(
             child: Image.asset(
-              'assets/image/backgrounduser.png',
+              'assets/image/background_user.png',
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 // Fallback if image fails to load
@@ -343,53 +341,21 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ),
                                       ),
                                       SizedBox(height: spec.fieldSpacing),
-                                      const Text(
-                                        'Email',
-                                        style: TextStyle(
-                                          color: Color(0xFF233A66),
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                        ),
-                                      ),
-                                      TextFormField(
+                                      CustomTextField(
+                                        label: 'Email',
+                                        hint: 'Enter your email',
                                         controller: _emailController,
                                         keyboardType: TextInputType.emailAddress,
                                         validator: _validateEmail,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Enter your email',
-                                          enabledBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(color: Color(0xFF88AEC9), width: 2),
-                                          ),
-                                          focusedBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(color: Color(0xFF233A66), width: 2),
-                                          ),
-                                        ),
-                                        style: const TextStyle(fontSize: 16),
+                                        spacing: spec.fieldSpacing,
                                       ),
-                                      SizedBox(height: spec.fieldSpacing),
-                                      const Text(
-                                        'Password',
-                                        style: TextStyle(
-                                          color: Color(0xFF233A66),
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                        ),
-                                      ),
-                                      TextFormField(
+                                      CustomTextField(
+                                        label: 'Password',
+                                        hint: 'Password',
                                         controller: _passwordController,
-                                        obscureText: true,
+                                        isPassword: true,
                                         validator: (value) =>
                                             value?.isEmpty ?? true ? 'Please enter your password' : null,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Password',
-                                          enabledBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(color: Color(0xFF88AEC9), width: 2),
-                                          ),
-                                          focusedBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(color: Color(0xFF233A66), width: 2),
-                                          ),
-                                        ),
-                                        style: const TextStyle(fontSize: 16),
                                       ),
                                       SizedBox(height: spec.sectionGap),
                                       Align(

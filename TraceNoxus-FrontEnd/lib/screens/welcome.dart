@@ -22,6 +22,7 @@ class WelcomeScreen extends StatelessWidget {
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     final spec = _WelcomeSpec.fromWidth(MediaQuery.of(context).size.width);
@@ -33,7 +34,7 @@ class WelcomeScreen extends StatelessWidget {
         children: [
           Positioned.fill(
             child: Image.asset(
-              'assets/image/backgrounduser.png',
+              'assets/image/background_user.png',
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) => Container(color: Colors.black87),
             ),

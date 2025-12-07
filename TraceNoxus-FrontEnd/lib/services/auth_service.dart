@@ -8,7 +8,7 @@ class AuthService {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   
   // Centralized base URL
-  static const String _baseUrl = AppConstants.baseUrl;
+  static final String _baseUrl = AppConstants.baseUrl;
 
   Future<bool> ping() async {
     try {
@@ -195,7 +195,7 @@ class AuthService {
       }
 
       final response = await _dio.get(
-        '$_baseUrl/api/user/',
+        '$_baseUrl/api/me/',
         options: Options(
           headers: {'Authorization': 'Bearer $token'},
         ),
@@ -213,6 +213,10 @@ class AuthService {
     required String name,
     int? age,
     dynamic profileImageFile,
+    String? gamesPlayed,
+    String? competitiveLevel,
+    String? preferredRoles,
+    bool removeProfileImage = false,
   }) async {
     final token = await getToken();
     if (token == null) throw Exception('User not authenticated');
@@ -220,6 +224,11 @@ class AuthService {
     final formData = FormData();
     formData.fields.add(MapEntry('name', name));
     if (age != null) formData.fields.add(MapEntry('age', age.toString()));
+    if (gamesPlayed != null) formData.fields.add(MapEntry('games_played', gamesPlayed));
+    if (competitiveLevel != null) formData.fields.add(MapEntry('competitive_level', competitiveLevel));
+    if (preferredRoles != null) formData.fields.add(MapEntry('preferred_roles', preferredRoles));
+    if (removeProfileImage) formData.fields.add(const MapEntry('remove_profile_image', 'true'));
+    
     if (profileImageFile != null) {
       formData.files.add(MapEntry(
         'profile_image',
@@ -228,7 +237,7 @@ class AuthService {
     }
 
     final response = await _dio.patch(
-      '$_baseUrl/api/user/',
+      '$_baseUrl/api/me/',
       data: formData,
       options: Options(
         headers: {
@@ -244,7 +253,7 @@ class AuthService {
     final token = await getToken();
     if (token == null) throw Exception('User not authenticated');
     await _dio.delete(
-      '$_baseUrl/api/user/',
+      '$_baseUrl/api/me/',
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
   }
