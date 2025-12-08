@@ -98,8 +98,11 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
                                 child: CircleAvatar(
                                   radius: 16,
                                   backgroundColor: const Color(0xFF2E5E88),
-                                  child: Text(displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
-                                      style: const TextStyle(color: Colors.white)),
+                                  backgroundImage: m.senderProfileImage != null ? NetworkImage(m.senderProfileImage!) : null,
+                                  child: m.senderProfileImage == null
+                                      ? Text(displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
+                                          style: const TextStyle(color: Colors.white))
+                                      : null,
                                 ),
                               ),
                             const SizedBox(width: 8),

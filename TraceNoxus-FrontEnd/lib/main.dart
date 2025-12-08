@@ -11,6 +11,7 @@ import 'providers/user_provider.dart';
 import 'providers/admin_provider.dart';
 import 'providers/event_provider.dart';
 import 'providers/notification_provider.dart';
+import 'screens/intro_video_screen.dart'; // import intro screen
 import 'providers/announcement_provider.dart'; //add
 import 'providers/user_management_provider.dart';
 import 'providers/team_provider.dart';
@@ -70,8 +71,9 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
         ),
         // home: const WelcomeScreen(),
-        home: const WelcomeScreen(),
+        home: const IntroVideoScreen(),
         routes: {
+          '/home': (context) => const WelcomeScreen(), // Map /home to WelcomeScreen
           '/welcome': (context) => const WelcomeScreen(),
           '/login': (context) => const LoginScreen(),
           '/register': (context) => const RegisterScreen(),

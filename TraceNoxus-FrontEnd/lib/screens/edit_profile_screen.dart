@@ -42,11 +42,33 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
+  bool _isPickingImage = false;
+
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.gallery, maxWidth: 800);
-    if (image != null) {
-      setState(() => _pickedImage = image);
+    if (_isPickingImage) return;
+    
+    setState(() => _isPickingImage = true);
+    
+    try {
+      final picker = ImagePicker();
+      final image = await picker.pickImage(source: ImageSource.gallery, maxWidth: 800);
+      if (image != null) {
+        setState(() => _pickedImage = image);
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+      // If the error is 'already_active', we can mostly ignore it or show a toast
+      if (e is! Exception || !e.toString().contains('already_active')) {
+         if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Failed to pick image')),
+            );
+         }
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isPickingImage = false);
+      }
     }
   }
 

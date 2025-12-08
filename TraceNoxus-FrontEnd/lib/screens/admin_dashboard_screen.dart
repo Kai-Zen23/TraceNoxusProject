@@ -1,7 +1,8 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:image_picker/image_picker.dart';
+
 import '../providers/auth_provider.dart';
 import '../screens/user_list_screen.dart';
 import '../screens/profile_screen.dart';
@@ -54,10 +55,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
 
     return Scaffold(
-      backgroundColor: _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFD3E3EA),
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text(''),
-        backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : const Color(0xFF2B4267),
+        backgroundColor: Colors.black,
+        elevation: 0,
         foregroundColor: Colors.white,
         actions: [
           // Role Mode Switch (Admin only)
@@ -116,12 +118,36 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
         ],
       ),
-      body: IndexedStack(
-        index: _selectedIndex,
+      body: Stack(
+        fit: StackFit.expand,
         children: [
-          AdminHomeTab(isDarkMode: _isDarkMode, onNavigate: (index) => setState(() => _selectedIndex = index)),
-          const UserListScreen(),
-          const ProfileScreen(),
+           // Background Image
+          Image.asset(
+            'assets/image/background_user.png',
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0F172A)),
+          ),
+          // Gradient Overlay
+          Container(
+             decoration: BoxDecoration(
+               gradient: LinearGradient(
+                 begin: Alignment.topCenter,
+                 end: Alignment.bottomCenter,
+                 colors: [
+                   Colors.black.withOpacity(0.3),
+                   Colors.black.withOpacity(0.5),
+                 ],
+               ),
+             ),
+          ),
+          IndexedStack(
+            index: _selectedIndex,
+            children: [
+              AdminHomeTab(isDarkMode: _isDarkMode, onNavigate: (index) => setState(() => _selectedIndex = index)),
+              const UserListScreen(),
+              const ProfileScreen(),
+            ],
+          ),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -131,9 +157,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             _selectedIndex = index;
           });
         },
-        backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-        selectedItemColor: _isDarkMode ? Colors.blueAccent : const Color(0xFF2B4267),
-        unselectedItemColor: _isDarkMode ? Colors.grey : Colors.grey,
+        backgroundColor: Colors.white.withOpacity(0.1), // Semi-transparent nav bar
+        selectedItemColor: Colors.blueAccent,
+        unselectedItemColor: Colors.black,
+        elevation: 0,
+        type: BottomNavigationBarType.fixed, // Ensure items are visible
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
@@ -241,45 +269,32 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
     final pendingUsers = ((stats?['total_users'] ?? 0) - (stats?['verified_users'] ?? 0)).toString();
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: EdgeInsets.only(
+        top: kToolbarHeight + MediaQuery.of(context).padding.top + 16, // Add safe area + toolbar height
+        left: 16.0,
+        right: 16.0,
+        bottom: 16.0,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Search Bar
-          TextField(
-            decoration: InputDecoration(
-              hintText: 'Search users, events, reports...',
-              hintStyle: TextStyle(color: widget.isDarkMode ? Colors.grey : Colors.grey[600]),
-              prefixIcon: const Icon(Icons.search),
-              filled: true,
-              fillColor: cardColor,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            ),
-            style: TextStyle(color: textColor),
-          ),
-          const SizedBox(height: 24),
-
 
           Text(
             'Admin Dashboard',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 40,
               fontWeight: FontWeight.bold,
-              color: textColor,
+              color: Colors.white,
             ),
           ),
 
           // System Status Snapshot
           Text(
             'System Status',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: textColor,
+              color: Colors.white,
             ),
           ),
           const SizedBox(height: 16),
@@ -307,19 +322,19 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
                 ),
               ],
             ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 1),
 
           // Quick Actions
           Text(
             'Quick Actions',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: textColor,
+              color: Colors.white,
             ),
           ),
-          const SizedBox(height: 16),
           GridView.count(
+            padding: EdgeInsets.zero,
             crossAxisCount: 2,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -342,52 +357,60 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
               }),
             ],
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 20),
         ],
       ),
     );
   }
 
   Widget _buildStatusCard(String title, String value, IconData icon, Color iconColor, Color cardColor, Color textColor) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withOpacity(0.2),
+                Colors.white.withOpacity(0.05),
+              ],
+            ),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: iconColor, size: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Icon(icon, color: iconColor, size: 24),
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white, // Always white on glass
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
               Text(
-                value,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
+                title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white70, // Always light on glass
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              color: textColor.withOpacity(0.7),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -403,30 +426,49 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
     required Color textColor,
     required VoidCallback onTap,
   }) {
-    return Card(
-      color: cardColor,
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 32, color: color),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withOpacity(0.2),
+                Colors.white.withOpacity(0.05),
+              ],
+            ),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(icon, size: 32, color: color),
+                    const SizedBox(height: 8),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                textAlign: TextAlign.center,
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -522,14 +564,7 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
        builder: (context) => Column(
          mainAxisSize: MainAxisSize.min,
          children: [
-           ListTile(
-             leading: const Icon(Icons.video_library, color: Colors.blue),
-             title: const Text('Upload from Gallery', style: TextStyle(color: Colors.white)),
-             onTap: () {
-               Navigator.pop(context);
-               _pickVideoFromGallery();
-             },
-           ),
+
            ListTile(
              leading: const Icon(Icons.link, color: Colors.green),
              title: const Text('Add via URL', style: TextStyle(color: Colors.white)),
@@ -544,80 +579,7 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
      );
   }
 
-  Future<void> _pickVideoFromGallery() async {
-    try {
-      final picker = ImagePicker();
-      final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
-      
-      if (video != null && mounted) {
-        final TextEditingController titleController = TextEditingController();
-        String selectedCategory = 'Game Highlights';
-        
-        await showDialog(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: const Text('Upload Highlight'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(labelText: 'Video Title'),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: selectedCategory,
-                  items: ['Game Highlights', 'Tournament Videos', 'Interview Videos']
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                      .toList(),
-                  onChanged: (val) => selectedCategory = val!,
-                  decoration: const InputDecoration(labelText: 'Category'),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  if (titleController.text.isNotEmpty) {
-                    Navigator.pop(dialogContext); // Close dialog
-                    
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Uploading video...')),
-                    );
-                    
-                    final error = await Provider.of<HighlightProvider>(context, listen: false)
-                        .uploadHighlight(
-                          videoFile: File(video.path),
-                          title: titleController.text,
-                          category: selectedCategory,
-                        );
-                        
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(error == null ? 'Upload successful!' : error)),
-                      );
-                    }
-                  }
-                },
-                child: const Text('Upload'),
-              ),
-            ],
-          ),
-        );
-      }
-    } catch (e) {
-      debugPrint('Error picking video: $e');
-      if (mounted) {
-         ScaffoldMessenger.of(context).showSnackBar(
-           const SnackBar(content: Text('Error picking video. Please try again.')),
-         );
-      }
-    }
-  }
+
 
   Future<void> _showUrlUploadDialog() async {
       final TextEditingController titleController = TextEditingController();

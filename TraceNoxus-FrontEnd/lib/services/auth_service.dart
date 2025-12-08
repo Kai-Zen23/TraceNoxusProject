@@ -142,8 +142,9 @@ class AuthService {
       return AuthResponse.fromJson(response.data);
     } on DioException catch (e) {
       if (e.response?.data is Map) {
+        final data = e.response!.data as Map;
         return AuthResponse(
-          error: e.response?.data['error'] ?? 'Failed to send OTP',
+          error: data['error'] ?? data['detail'] ?? 'Failed to send OTP',
         );
       }
       return AuthResponse(error: 'Failed to send OTP: ${e.message}');
@@ -179,8 +180,9 @@ class AuthService {
       return AuthResponse.fromJson(response.data);
     } on DioException catch (e) {
       if (e.response?.data is Map) {
+        final data = e.response!.data as Map;
         return AuthResponse(
-          error: e.response?.data['error'] ?? 'Password reset failed',
+          error: data['error'] ?? data['detail'] ?? 'Password reset failed',
         );
       }
       return AuthResponse(error: 'Password reset failed: ${e.message}');

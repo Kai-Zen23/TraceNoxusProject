@@ -87,7 +87,7 @@ class AuthProvider extends ChangeNotifier {
     // notifyListeners(); // Removed to prevent side effects during initialization
   }
 
-  Future<bool> register(String email, String username, String password) async {
+  Future<bool> register(String email, String username, String password, {String? phoneNumber}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -96,6 +96,7 @@ class AuthProvider extends ChangeNotifier {
       email: email,
       username: username,
       password: password,
+      phoneNumber: phoneNumber,
     );
 
     final response = await _authService.register(request);

@@ -123,10 +123,10 @@ class _ForgotPasswordOtpScreenState extends State<ForgotPasswordOtpScreen> {
                               children: [
                                 Text(
                                   'OTP SENT',
-                                  style: GoogleFonts.rye(
+                                  style: TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
-                                    color: const Color(0xFF3A4A6B),
+                                    color: Colors.white,
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -141,8 +141,8 @@ class _ForgotPasswordOtpScreenState extends State<ForgotPasswordOtpScreen> {
                                       width: 60,
                                       height: 60,
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF5B84B1).withOpacity(0.8),
-                                        borderRadius: BorderRadius.circular(8),
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(12),
                                         boxShadow: [
                                           BoxShadow(
                                             color: Colors.black.withOpacity(0.1),
@@ -158,9 +158,9 @@ class _ForgotPasswordOtpScreenState extends State<ForgotPasswordOtpScreen> {
                                         keyboardType: TextInputType.number,
                                         textAlign: TextAlign.center,
                                         maxLength: 1,
-                                        style: GoogleFonts.rye(
+                                        style: const TextStyle(
                                           fontSize: 24,
-                                          color: Colors.white,
+                                          color: Color(0xFF233A66),
                                           fontWeight: FontWeight.bold,
                                         ),
                                         decoration: const InputDecoration(
@@ -177,37 +177,46 @@ class _ForgotPasswordOtpScreenState extends State<ForgotPasswordOtpScreen> {
                                 ),
                                 const SizedBox(height: 32),
                                 
-                                // Verify Button (Added for usability)
+                                // Verify Button
                                 Container(
                                   width: double.infinity,
                                   margin: const EdgeInsets.only(bottom: 16),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(25),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.2),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
                                   child: ElevatedButton(
                                     onPressed: _verifyOtp,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF5B84B1),
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(vertical: 16),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(25),
-                                      ),
+                                      padding: EdgeInsets.zero,
                                       elevation: 0,
+                                      backgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(32.0),
+                                      ),
                                     ),
-                                    child: Text(
-                                      'VERIFY',
-                                      style: GoogleFonts.rye(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.white,
+                                    child: Ink(
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [
+                                            Color(0xFF6DA7CE),
+                                            Color(0xFF375468),
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                        borderRadius: BorderRadius.circular(32.0),
+                                      ),
+                                      child: Container(
+                                        alignment: Alignment.center,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 16.0,
+                                        ),
+                                        child: const Text(
+                                          'VERIFY',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18.0,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -215,34 +224,44 @@ class _ForgotPasswordOtpScreenState extends State<ForgotPasswordOtpScreen> {
 
                                 // Resend Button
                                 Container(
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(25),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.2),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
+                                  width: 50,
+                                  height: 30,
                                   child: ElevatedButton(
                                     onPressed: _resendOtp,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF4A6583), // Slightly darker for secondary
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(vertical: 16),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(25),
-                                      ),
+                                      padding: EdgeInsets.zero,
                                       elevation: 0,
+                                      backgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(32.0),
+                                      ),
                                     ),
-                                    child: Text(
-                                      'RESEND',
-                                      style: GoogleFonts.rye(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.white,
+                                    child: Ink(
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [
+                                            Color(0xFF6DA7CE),
+                                            Color(0xFF375468),
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                        borderRadius: BorderRadius.circular(20.0),
+                                      ),
+                                      child: Container(
+                                        alignment: Alignment.center,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 10.0,
+                                        ),
+                                        child: const Text(
+                                          'RESEND',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 9.0,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),

@@ -110,26 +110,62 @@ class _ChatScreenState extends State<ChatScreen> {
                         },
                         child: Align(
                           alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                          child: Column(
-                            crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Container(
-                                margin: const EdgeInsets.symmetric(vertical: 4),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: isMe ? const Color(0xFF2B4267) : const Color(0xFF2E5E88),
-                                  borderRadius: BorderRadius.circular(16),
+                              if (!isMe) ...[
+                                CircleAvatar(
+                                  radius: 16,
+                                  backgroundColor: Colors.grey[800],
+                                  backgroundImage: m.senderProfileImage != null
+                                      ? NetworkImage(m.senderProfileImage!)
+                                      : null,
+                                  child: m.senderProfileImage == null
+                                      ? const Icon(Icons.person, color: Colors.white, size: 16)
+                                      : null,
                                 ),
-                                child: Text(m.content, style: const TextStyle(color: Colors.white)),
+                                const SizedBox(width: 8),
+                              ],
+                              Column(
+                                crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    margin: const EdgeInsets.symmetric(vertical: 4),
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: isMe ? const Color(0xFF2B4267) : const Color(0xFF2E5E88),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Text(m.content, style: const TextStyle(color: Colors.white)),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                                    child: Text(
+                                      DateFormat('h:mm a').format(m.timestamp.toUtc().add(const Duration(hours: 8))),
+                                      style: const TextStyle(color: Colors.white54, fontSize: 10),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                ],
                               ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 4),
-                                child: Text(
-                                  DateFormat('h:mm a').format(m.timestamp.toUtc().add(const Duration(hours: 8))),
-                                  style: const TextStyle(color: Colors.white54, fontSize: 10),
+                              if (isMe) ...[
+                                const SizedBox(width: 8),
+                                CircleAvatar(
+                                  radius: 16,
+                                  backgroundColor: const Color(0xFF3A8FB7),
+                                  backgroundImage: m.senderProfileImage != null 
+                                      ? NetworkImage(m.senderProfileImage!) 
+                                      : (auth.currentUser?.profileImageUrl != null 
+                                          ? NetworkImage(auth.currentUser!.profileImageUrl!) 
+                                          : null),
+                                  child: (m.senderProfileImage == null && auth.currentUser?.profileImageUrl == null)
+                                      ? Text((auth.currentUser?.username ?? 'Me')[0].toUpperCase(),
+                                          style: const TextStyle(color: Colors.white))
+                                      : null,
                                 ),
-                              ),
-                              const SizedBox(height: 4),
+                              ],
                             ],
                           ),
                         ),

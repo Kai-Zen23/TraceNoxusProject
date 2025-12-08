@@ -5,6 +5,7 @@ import '../providers/message_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/friend_provider.dart';
 import 'chat_screen.dart';
+import '../core/constants/app_constants.dart';
 import 'other_user_profile_screen.dart';
 
 class MessagesScreen extends StatefulWidget {
@@ -160,13 +161,26 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF3A8FB7),
                                   borderRadius: BorderRadius.circular(15),
+                                  image: user['profile_image'] != null
+                                      ? DecorationImage(
+                                          image: NetworkImage(
+                                            user['profile_image'].toString().startsWith('http')
+                                                ? user['profile_image']
+                                                : '${AppConstants.baseUrl}${user['profile_image'].toString().replaceAll('file://', '')}',
+                                          ),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : null,
                                 ),
-                                child: Center(
-                                  child: Text(
-                                    name.isNotEmpty ? name[0].toUpperCase() : '?',
-                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
-                                  ),
-                                ),
+                                child: user['profile_image'] == null
+                                    ? Center(
+                                        child: Text(
+                                          name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                          style: const TextStyle(
+                                              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                                        ),
+                                      )
+                                    : null,
                               ),
                               const SizedBox(height: 4),
                               SizedBox(
@@ -248,15 +262,33 @@ class _MessagesScreenState extends State<MessagesScreen> {
                               children: [
                                 GestureDetector(
                                   onTap: () => _showProfileOptions(context, user, friendProvider),
-                                  child: Container(
-                                    width: 50,
-                                    height: 50,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF3A8FB7),
-                                      borderRadius: BorderRadius.circular(12),
+                                    child: Container(
+                                      width: 50,
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF3A8FB7),
+                                        borderRadius: BorderRadius.circular(12),
+                                        image: user['profile_image'] != null
+                                            ? DecorationImage(
+                                                image: NetworkImage(
+                                                  user['profile_image'].toString().startsWith('http')
+                                                      ? user['profile_image']
+                                                      : '${AppConstants.baseUrl}${user['profile_image'].toString().replaceAll('file://', '')}',
+                                                ),
+                                                fit: BoxFit.cover,
+                                              )
+                                            : null,
+                                      ),
+                                      child: user['profile_image'] == null
+                                          ? Center(
+                                              child: Text(
+                                                name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                                style: const TextStyle(
+                                                    color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                                              ),
+                                            )
+                                          : null,
                                     ),
-                                    child: const Icon(Icons.person, color: Colors.white),
-                                  ),
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(

@@ -28,6 +28,7 @@ RegisterRequest _$RegisterRequestFromJson(Map<String, dynamic> json) =>
       email: json['email'] as String,
       username: json['username'] as String,
       password: json['password'] as String,
+      phoneNumber: json['phone_number'] as String?,
     );
 
 Map<String, dynamic> _$RegisterRequestToJson(RegisterRequest instance) =>
@@ -35,6 +36,7 @@ Map<String, dynamic> _$RegisterRequestToJson(RegisterRequest instance) =>
       'email': instance.email,
       'username': instance.username,
       'password': instance.password,
+      'phone_number': instance.phoneNumber,
     };
 
 OtpVerificationRequest _$OtpVerificationRequestFromJson(

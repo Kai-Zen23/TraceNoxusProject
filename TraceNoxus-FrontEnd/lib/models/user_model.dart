@@ -1,3 +1,5 @@
+import '../core/constants/app_constants.dart';
+
 class UserModel {
   final int id;
   final String email;
@@ -39,6 +41,19 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    String? rawProfileImage = (json['profile_image'] as String?) ?? 
+                             (json['profile_image_url'] as String?) ?? 
+                             (json['profileImage'] as String?);
+
+    if (rawProfileImage != null) {
+      if (rawProfileImage.startsWith('file://')) {
+        rawProfileImage = rawProfileImage.replaceFirst('file://', '');
+      }
+      if (!rawProfileImage.startsWith('http')) {
+        rawProfileImage = '${AppConstants.baseUrl}$rawProfileImage';
+      }
+    }
+
     return UserModel(
       id: json['id'] as int,
       email: json['email'] as String,
@@ -55,7 +70,7 @@ class UserModel {
           ? DateTime.parse(json['last_login'] as String)
           : null,
       name: json['name'] as String? ?? json['username'] as String? ?? json['first_name'] as String?,
-      profileImageUrl: (json['profile_image'] as String?) ?? (json['profile_image_url'] as String?) ?? (json['profileImage'] as String?),
+      profileImageUrl: rawProfileImage,
       age: json['age'] as int?,
       gamesPlayed: json['games_played'] as String?,
       competitiveLevel: json['competitive_level'] as String?,

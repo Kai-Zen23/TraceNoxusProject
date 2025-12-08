@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/auth_provider.dart';
 import 'forgot_password_otp_screen.dart';
+import '../widgets/custom_text_field.dart';
+
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({Key? key}) : super(key: key);
@@ -25,20 +27,40 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> _sendOtp() async {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final success = await authProvider.sendForgotPasswordOtp(_emailController.text);
-      if (success && mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ForgotPasswordOtpScreen(email: _emailController.text),
-          ),
-        );
+      try {
+        final success = await authProvider.sendForgotPasswordOtp(_emailController.text);
+        if (success && mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ForgotPasswordOtpScreen(email: _emailController.text),
+            ),
+          );
+        } else if (mounted) {
+          // Show error from provider (e.g. Email not found)
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(authProvider.error ?? 'Failed to send OTP. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('An error occurred: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+  
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
@@ -93,10 +115,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 children: [
                                   Text(
                                     'FORGOT PASSWORD',
-                                    style: GoogleFonts.rye(
+                                    style: TextStyle(
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF3A4A6B),
+                                      color: Colors.white,
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
@@ -107,10 +129,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                     alignment: Alignment.centerLeft,
                                     child: Text(
                                       'Email',
-                                      style: GoogleFonts.rye(
+                                      style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
-                                        color: const Color(0xFF3A4A6B),
+                                        color: Colors.white,
                                       ),
                                     ),
                                   ),
@@ -153,35 +175,50 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   const SizedBox(height: 32),
                                   
                                   // Send OTP Button
-                                  Container(
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(25),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.2),
-                                          blurRadius: 4,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: ElevatedButton(
-                                      onPressed: _sendOtp,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(0xFF5B84B1), // Muted blue from design
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(vertical: 16),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(25),
-                                        ),
-                                        elevation: 0,
-                                      ),
-                                      child: Text(
-                                        'SEND OTP',
-                                        style: GoogleFonts.rye(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.white,
+                                  Align(
+                                    alignment: Alignment.center,
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(maxWidth: 400),
+                                      child: SizedBox(
+                                        width: double.infinity,
+                                        child: ElevatedButton(
+                                          onPressed: _sendOtp,
+                                          style: ElevatedButton.styleFrom(
+                                            padding: EdgeInsets.zero,
+                                            elevation: 0,
+                                            backgroundColor: Colors.transparent,
+                                            shadowColor: Colors.transparent,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(32.0),
+                                            ),
+                                          ),
+                                          child: Ink(
+                                            decoration: BoxDecoration(
+                                              gradient: const LinearGradient(
+                                                colors: [
+                                                  Color(0xFF6DA7CE),
+                                                  Color(0xFF375468),
+                                                ],
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                              ),
+                                              borderRadius: BorderRadius.circular(32.0),
+                                            ),
+                                            child: Container(
+                                              alignment: Alignment.center,
+                                              padding: const EdgeInsets.symmetric(
+                                                vertical: 16.0,
+                                              ),
+                                              child: const Text(
+                                                'SEND OTP',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 18.0,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
