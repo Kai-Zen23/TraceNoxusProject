@@ -4,6 +4,7 @@ import 'package:chewie/chewie.dart';
 import 'package:provider/provider.dart';
 import '../providers/highlight_provider.dart';
 import '../models/highlight_model.dart';
+import '../main.dart'; // Import for routeObserver
 
 class HighlightsSection extends StatefulWidget {
   final bool isAdmin;
@@ -19,7 +20,7 @@ class HighlightsSection extends StatefulWidget {
   State<HighlightsSection> createState() => _HighlightsSectionState();
 }
 
-class _HighlightsSectionState extends State<HighlightsSection> {
+class _HighlightsSectionState extends State<HighlightsSection> with RouteAware {
   String _selectedCategory = 'Game Highlights';
   final List<String> _categories = [
     'Game Highlights',
@@ -37,6 +38,31 @@ class _HighlightsSectionState extends State<HighlightsSection> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<HighlightProvider>(context, listen: false).fetchHighlights();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    _disposeControllers();
+    super.dispose();
+  }
+
+  @override
+  void didPushNext() {
+    // Pause video when navigating to another screen
+    _videoPlayerController?.pause();
+  }
+
+  @override
+  void didPopNext() {
+    // Play video when returning to this screen
+    _videoPlayerController?.play();
   }
 
   Future<void> _initializePlayer(String videoUrl, {bool isAsset = false}) async {
@@ -92,12 +118,6 @@ class _HighlightsSectionState extends State<HighlightsSection> {
     _chewieController?.dispose();
     _videoPlayerController = null;
     _chewieController = null;
-  }
-
-  @override
-  void dispose() {
-    _disposeControllers();
-    super.dispose();
   }
 
   void _showAdminOptions(BuildContext context, HighlightModel video) {

@@ -4,6 +4,7 @@ import 'package:TraceNoxus/models/user_model.dart';
 import 'package:TraceNoxus/providers/auth_provider.dart';
 import 'package:TraceNoxus/providers/friend_provider.dart';
 import 'package:TraceNoxus/providers/room_chat_provider.dart';
+import 'package:TraceNoxus/core/utils/message_date_utils.dart';
 import 'other_user_profile_screen.dart';
 
 class TeamChatScreen extends StatefulWidget {
@@ -207,6 +208,17 @@ class _ChatListView extends StatelessWidget {
                 Text(
                   message.content,
                   style: const TextStyle(color: Colors.white),
+                ),
+                const SizedBox(height: 2),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    formatMessageTimestamp(message.timestamp),
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.5),
+                      fontSize: 10,
+                    ),
+                  ),
                 ),
               ],
             ),

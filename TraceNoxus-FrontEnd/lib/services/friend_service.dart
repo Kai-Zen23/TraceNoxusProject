@@ -29,7 +29,7 @@ class FriendService {
 
   Future<void> addFriend(int friendId) async {
     final t = await _token();
-    await _dio.post('$_baseUrl/api/friends/', data: {'friend': friendId}, options: Options(headers: {'Authorization': 'Bearer $t'}));
+    await _dio.post('$_baseUrl/api/friend-requests/', data: {'receiver': friendId}, options: Options(headers: {'Authorization': 'Bearer $t'}));
   }
 
   Future<void> removeFriend(int friendshipId) async {

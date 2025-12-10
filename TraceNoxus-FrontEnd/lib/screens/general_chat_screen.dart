@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart'; 
+import '../core/utils/message_date_utils.dart';
 import 'package:TraceNoxus/providers/room_chat_provider.dart';
 import 'package:TraceNoxus/providers/friend_provider.dart';
 import 'package:TraceNoxus/providers/auth_provider.dart';
@@ -129,7 +130,7 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
                                   Padding(
                                     padding: const EdgeInsets.only(top: 2, left: 4, right: 4),
                                     child: Text(
-                                      DateFormat('h:mm a').format(m.timestamp.toUtc().add(const Duration(hours: 8))),
+                                      formatMessageTimestamp(m.timestamp),
                                       style: const TextStyle(color: Colors.white54, fontSize: 10),
                                     ),
                                   ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import '../core/utils/message_date_utils.dart';
 import '../providers/message_provider.dart';
 import '../providers/auth_provider.dart';
 
@@ -143,7 +144,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                   Padding(
                                     padding: const EdgeInsets.symmetric(horizontal: 4),
                                     child: Text(
-                                      DateFormat('h:mm a').format(m.timestamp.toUtc().add(const Duration(hours: 8))),
+                                      formatMessageTimestamp(m.timestamp),
                                       style: const TextStyle(color: Colors.white54, fontSize: 10),
                                     ),
                                   ),

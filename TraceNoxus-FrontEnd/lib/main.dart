@@ -34,6 +34,8 @@ import 'screens/user_home_screen.dart';
 import 'screens/welcome.dart';
 import 'screens/user_management_screen.dart';
 
+final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>();
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
@@ -70,6 +72,7 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.blue,
           useMaterial3: true,
         ),
+        navigatorObservers: [routeObserver],
         // home: const WelcomeScreen(),
         home: const IntroVideoScreen(),
         routes: {
