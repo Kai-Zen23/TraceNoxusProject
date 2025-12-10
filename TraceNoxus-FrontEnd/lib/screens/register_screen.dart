@@ -434,7 +434,7 @@ class RegisterScreenState extends State<RegisterScreen> with TickerProviderState
                       ),
                       SizedBox(height: spec.fieldSpacing),
                       CustomTextField(
-                        label: 'Phone Number (Optional)',
+                        label: 'Phone Number',
                         hint: '09123456789',
                         controller: _phoneController,
                         keyboardType: TextInputType.phone,
