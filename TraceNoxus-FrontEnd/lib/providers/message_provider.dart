@@ -6,6 +6,7 @@ import '../models/message_model.dart';
 import '../services/message_service.dart';
 import 'auth_provider.dart';
 import '../core/constants/app_constants.dart';
+import '../core/services/sound_service.dart';
 
 class MessageProvider extends ChangeNotifier {
   final MessageService _service = MessageService();
@@ -171,8 +172,14 @@ class MessageProvider extends ChangeNotifier {
 
     final uri = Uri.parse(AppConstants.baseUrl);
     final wsScheme = uri.scheme == 'https' ? 'wss' : 'ws';
-    final hostPort = uri.hasPort ? '${uri.host}:${uri.port}' : uri.host;
-    final wsUrl = Uri.parse('$wsScheme://$hostPort/ws/dm/$otherUserId/?token=$token');
+    
+    // Construct authority (host:port) only if port is explicit and non-default
+    String hostPart = uri.host;
+    if (uri.hasPort && uri.port != 0 && uri.port != 80 && uri.port != 443) {
+      hostPart = '$hostPart:${uri.port}';
+    }
+
+    final wsUrl = Uri.parse('$wsScheme://$hostPart/ws/dm/$otherUserId/?token=$token');
 
     print('Connecting to DM WebSocket: $wsUrl');
     try {
@@ -202,6 +209,10 @@ class MessageProvider extends ChangeNotifier {
             _allMessages.add(msg);
           }
           
+          if (msg.sender != _selfId) {
+             SoundService().playNotificationSound();
+          }
+
           notifyListeners();
         } catch (e) {
           print('Error parsing DM WebSocket message: $e');

@@ -6,6 +6,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../core/constants/app_constants.dart';
 import '../services/room_message_service.dart';
 import '../models/message_model.dart';
+import '../core/services/sound_service.dart';
+import 'auth_provider.dart';
 
 class RoomChatProvider extends ChangeNotifier {
   final RoomMessageService _service = RoomMessageService();
@@ -18,6 +20,12 @@ class RoomChatProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   List<MessageModel> get messages => _messages;
+
+  int? _selfId;
+
+  void setSelf(AuthProvider auth) {
+    _selfId = auth.currentUser?.id;
+  }
 
   Future<void> load({String room = 'general'}) async {
     _isLoading = true; _error = null; notifyListeners();
@@ -37,6 +45,11 @@ class RoomChatProvider extends ChangeNotifier {
       try {
         final data = jsonDecode(event);
         final msg = MessageModel.fromJson(Map<String, dynamic>.from(data));
+        
+        if (_selfId != null && msg.sender != _selfId) {
+          SoundService().playNotificationSound();
+        }
+
         _messages = [..._messages, msg];
         notifyListeners();
       } catch (_) {}

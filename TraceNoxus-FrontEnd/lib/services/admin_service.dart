@@ -10,8 +10,8 @@ class AdminService {
 
   AdminService() {
     _dio.options.baseUrl = AppConstants.baseUrl;
-    _dio.options.connectTimeout = const Duration(seconds: 5);
-    _dio.options.receiveTimeout = const Duration(seconds: 3);
+    _dio.options.connectTimeout = const Duration(seconds: 30);
+    _dio.options.receiveTimeout = const Duration(seconds: 30);
   }
 
   Future<String?> _getToken() async {

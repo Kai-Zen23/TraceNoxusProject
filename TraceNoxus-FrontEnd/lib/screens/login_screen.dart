@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/custom_text_field.dart';
 import 'register_screen.dart';
+import 'register_screen.dart';
 import 'forgot_password_screen.dart';
+import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -29,6 +31,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   late Animation<Offset> _panelSlideAnim;
 
   bool _isLoading = true;
+  bool _rememberMe = true;
 
   @override
   void initState() {
@@ -49,6 +52,21 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 
     _setupAnimations();
     _startLoadingSequence();
+    _loadSavedCredentials();
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    final authService = AuthService();
+    final credentials = await authService.getSavedCredentials();
+    if (credentials['email'] != null && mounted) {
+      setState(() {
+        _emailController.text = credentials['email']!;
+        if (credentials['password'] != null) {
+          _passwordController.text = credentials['password']!;
+        }
+        _rememberMe = true; // If we found credentials, rememberMe was true
+      });
+    }
   }
 
   void _setupAnimations() {
@@ -139,6 +157,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       final success = await authProvider.login(
         _emailController.text,
         _passwordController.text,
+        rememberMe: _rememberMe,
       );
 
       if (!success && mounted) {
@@ -403,6 +422,34 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                         isPassword: true,
                         validator: (value) =>
                             value?.isEmpty ?? true ? 'Please enter your password' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Transform.scale(
+                            scale: 0.9,
+                            child: Checkbox(
+                              value: _rememberMe,
+                              onChanged: (value) {
+                                setState(() {
+                                  _rememberMe = value ?? true;
+                                });
+                              },
+                              activeColor: const Color(0xFF233A66),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                          ),
+                          const Text(
+                            'Remember Me',
+                            style: TextStyle(
+                              color: Color(0xFF233A66),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(height: spec.sectionGap),
                       Align(

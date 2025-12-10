@@ -23,7 +23,9 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<FriendProvider>(context, listen: false).loadAllUsers();
+      final auth = Provider.of<AuthProvider>(context, listen: false);
       final p = Provider.of<RoomChatProvider>(context, listen: false);
+      p.setSelf(auth);
       p.load(room: 'general');
       p.connect(room: 'general');
     });

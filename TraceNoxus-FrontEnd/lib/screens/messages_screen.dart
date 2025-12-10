@@ -89,20 +89,20 @@ class _MessagesScreenState extends State<MessagesScreen> {
                         icon: const Icon(Icons.arrow_back_ios, color: Colors.white70),
                         onPressed: () => Navigator.pop(context),
                       ),
-                      const Text(
-                        'Direct Messages',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Serif',
+                      const Expanded(
+                        child: Center(
+                          child: Text(
+                            'Direct Messages',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Serif',
+                            ),
+                          ),
                         ),
                       ),
-                      CircleAvatar(
-                        radius: 18,
-                        backgroundColor: const Color(0xFF3A8FB7),
-                        child: const Icon(Icons.person, color: Colors.white, size: 20),
-                      ),
+                      const SizedBox(width: 48), // Balance the back button
                     ],
                   ),
                 ),

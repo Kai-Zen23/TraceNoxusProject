@@ -42,37 +42,65 @@ class AuthProvider extends ChangeNotifier {
     // _checkAuthStatus(); // Removed from constructor
   }
 
+  bool _isInitialized = false;
+  bool get isInitialized => _isInitialized;
+
   // Initialize from stored data (RBAC pattern)
   Future<void> initialize() async {
-    // Avoid notifying listeners synchronously during creation
-    // _isLoading = true; // Don't set this here if it triggers notifyListeners immediately
-
     await _checkAuthStatus(); // Check auth status first
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token') ?? prefs.getString('access_token');
-      final refresh = prefs.getString('refresh') ?? prefs.getString('refresh_token');
+      final token = await _authService.getToken(); 
+      final refresh = await _authService.getRefreshToken();
+      
       final userJson = prefs.getString('user_data');
       
       // Load virtual role if exists
       _virtualRole = prefs.getString('virtual_role');
       _originalRole = prefs.getString('original_role');
 
-      if (token != null && userJson != null) {
+      if (token != null) {
         _accessToken = token;
         _refreshToken = refresh;
-        _currentUser = UserModel.fromJson(
-          Map<String, dynamic>.from(
-            jsonDecode(userJson) as Map,
-          ),
-        );
+
+        if (userJson != null) {
+           _currentUser = UserModel.fromJson(
+            Map<String, dynamic>.from(
+              jsonDecode(userJson) as Map,
+            ),
+          );
+        } else {
+          // Fallback: Fetch user data from API if not in cache but token exists
+          try {
+            final userData = await _authService.getUserData();
+            _currentUser = UserModel.fromJson(userData);
+          } catch (e) {
+             debugPrint('Failed to fetch user data: $e. Attempting refresh...');
+             // 401 or other error, try refreshing token
+             try {
+                final refreshed = await refreshAccessToken(); // Uses AuthProvider's refresh logic
+                if (refreshed) {
+                   // Retry fetch with new token
+                   final userData = await _authService.getUserData();
+                   _currentUser = UserModel.fromJson(userData);
+                } else {
+                   throw Exception('Refresh failed');
+                }
+             } catch (refreshError) {
+                debugPrint('Auto-login failed after refresh attempt: $refreshError');
+                _currentUser = null;
+                _accessToken = null;
+                // Do not call logout() here to avoid loop, just leave unauthenticated
+             }
+          }
+        }
       }
     } catch (e) {
       debugPrint('Error initializing auth: $e');
       await logout();
     } finally {
-      // _isLoading = false;
+      _isInitialized = true;
       notifyListeners();
     }
   }
@@ -166,7 +194,7 @@ class AuthProvider extends ChangeNotifier {
     return true;
   }
 
-  Future<bool> login(String email, String password) async {
+  Future<bool> login(String email, String password, {bool rememberMe = true}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -176,7 +204,7 @@ class AuthProvider extends ChangeNotifier {
       password: password,
     );
 
-    final response = await _authService.login(request);
+    final response = await _authService.login(request, rememberMe: rememberMe);
     _isLoading = false;
 
     if (response.error != null) {
@@ -191,11 +219,11 @@ class AuthProvider extends ChangeNotifier {
       _accessToken = response.token;
       _refreshToken = response.refresh;
 
-      // Save to SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('token', _accessToken!);
-      await prefs.setString('refresh', _refreshToken!);
-      await prefs.setString('user_data', jsonEncode(_currentUser!.toJson()));
+      // Save user data to SharedPreferences (tokens are handled by AuthService in SecureStorage)
+      if (rememberMe) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_data', jsonEncode(_currentUser!.toJson()));
+      }
     } else {
       // Try to get user data from API
       try {
@@ -205,8 +233,7 @@ class AuthProvider extends ChangeNotifier {
         
         // Save to SharedPreferences
         final prefs = await SharedPreferences.getInstance();
-        if (_accessToken != null) {
-          await prefs.setString('token', _accessToken!);
+        if (_accessToken != null && rememberMe) {
           await prefs.setString('user_data', jsonEncode(_currentUser!.toJson()));
         }
       } catch (e) {
@@ -305,8 +332,7 @@ class AuthProvider extends ChangeNotifier {
       _accessToken = await _authService.getToken();
 
       if (_accessToken != null) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', _accessToken!);
+        // Token is already updated in SecureStorage by AuthService.refreshToken
         notifyListeners();
         return true;
       }

@@ -30,6 +30,7 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
       context.read<FriendProvider>().loadAllUsers();
       
       final chat = context.read<RoomChatProvider>();
+      chat.setSelf(context.read<AuthProvider>());
       // Load history first
       await chat.load(room: widget.config.channelId);
       // Then connect websocket

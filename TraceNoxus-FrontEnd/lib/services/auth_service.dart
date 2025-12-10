@@ -19,6 +19,9 @@ class AuthService {
     }
   }
 
+  // In-memory token for current session (if rememberMe is false)
+  String? _tempToken;
+
   Future<AuthResponse> register(RegisterRequest request) async {
     try {
       final response = await _dio.post(
@@ -81,7 +84,7 @@ class AuthService {
     }
   }
 
-  Future<AuthResponse> login(LoginRequest request) async {
+  Future<AuthResponse> login(LoginRequest request, {bool rememberMe = true}) async {
     try {
       final response = await _dio.post(
         '$_baseUrl/api/login/',
@@ -104,8 +107,23 @@ class AuthService {
       );
       
       if (authResponse.token != null) {
-        await _storage.write(key: 'token', value: authResponse.token);
-        await _storage.write(key: 'refresh', value: authResponse.refresh);
+        // Always store in memory for current session
+        _tempToken = authResponse.token;
+
+        if (rememberMe) {
+          await _storage.write(key: 'token', value: authResponse.token);
+          await _storage.write(key: 'refresh', value: authResponse.refresh);
+          // Save credentials for pre-filling
+          await _storage.write(key: 'saved_email', value: request.email);
+          await _storage.write(key: 'saved_password', value: request.password);
+        } else {
+          // Clear any existing tokens if not remembering
+          await _storage.delete(key: 'token');
+          await _storage.delete(key: 'refresh');
+          // Clear saved credentials
+          await _storage.delete(key: 'saved_email');
+          await _storage.delete(key: 'saved_password');
+        }
       }
       
       return authResponse;
@@ -120,12 +138,28 @@ class AuthService {
   }
 
   Future<void> logout() async {
+    _tempToken = null; // Clear in-memory token
     await _storage.delete(key: 'token');
     await _storage.delete(key: 'refresh');
   }
 
   Future<String?> getToken() async {
+    // Return in-memory token if available (session), otherwise check storage (persistence)
+    if (_tempToken != null) return _tempToken;
     return await _storage.read(key: 'token');
+  }
+
+  Future<String?> getRefreshToken() async {
+    return await _storage.read(key: 'refresh');
+  }
+
+  Future<Map<String, String?>> getSavedCredentials() async {
+    final email = await _storage.read(key: 'saved_email');
+    final password = await _storage.read(key: 'saved_password');
+    return {
+      'email': email,
+      'password': password,
+    };
   }
 
   Future<bool> isAuthenticated() async {
@@ -238,17 +272,38 @@ class AuthService {
       ));
     }
 
-    final response = await _dio.patch(
-      '$_baseUrl/api/me/',
-      data: formData,
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'multipart/form-data',
-        },
-      ),
-    );
-    return response.data;
+    try {
+      final response = await _dio.patch(
+        '$_baseUrl/api/me/',
+        data: formData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'multipart/form-data',
+          },
+        ),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response?.data is Map) {
+        final data = e.response!.data as Map;
+        // If "error" key exists
+        if (data.containsKey('error')) throw Exception(data['error']);
+        if (data.containsKey('detail')) throw Exception(data['detail']);
+        
+        // If field errors (flatten list of errors)
+        final errors = data.entries.map((e) {
+          final value = e.value;
+          if (value is List) {
+            return "${e.key}: ${value.join(', ')}";
+          }
+          return "${e.key}: $value";
+        }).join('\n');
+        
+        if (errors.isNotEmpty) throw Exception(errors);
+      }
+      throw Exception('Failed to update profile: ${e.message}');
+    }
   }
 
   Future<void> deleteUserProfile() async {
@@ -274,7 +329,15 @@ class AuthService {
       if (response.statusCode == 200) {
         final data = response.data;
         final newAccessToken = data['access'] as String;
-        await _storage.write(key: 'token', value: newAccessToken);
+        
+        // Update in-memory token
+        _tempToken = newAccessToken;
+
+        // Persist only if refresh token exists in storage (implies Remember Me was true)
+        // Actually, if we found a refresh token in storage, we should update the access token in storage too.
+        if (refreshToken != null) {
+           await _storage.write(key: 'token', value: newAccessToken);
+        }
       } else {
         throw Exception('Failed to refresh token');
       }
