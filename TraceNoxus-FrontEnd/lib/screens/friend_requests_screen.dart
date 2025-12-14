@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/friend_requests_provider.dart';
+import '../providers/friend_provider.dart';
 import '../widgets/styled_back_button.dart';
+import 'chat_screen.dart';
+import '../core/constants/app_constants.dart';
 
 class FriendRequestsScreen extends StatefulWidget {
   const FriendRequestsScreen({super.key});
@@ -16,12 +19,18 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<FriendRequestsProvider>(context, listen: false).refresh();
+      final friendPrivider =
+          Provider.of<FriendProvider>(context, listen: false);
+      friendPrivider.loadFriends();
+      friendPrivider.loadAllUsers();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<FriendRequestsProvider>(context);
+    final friendProvider = Provider.of<FriendProvider>(context);
+
     return Scaffold(
       body: Stack(
         children: [
@@ -50,7 +59,7 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
           ),
           SafeArea(
             child: DefaultTabController(
-              length: 2,
+              length: 3,
               child: Column(
                 children: [
                   Padding(
@@ -62,7 +71,7 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
                         Expanded(
                           child: Center(
                             child: const Text(
-                              'Friend Requests',
+                              'Friends',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 20,
@@ -80,7 +89,11 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
                           child: IconButton(
                             icon: const Icon(Icons.refresh,
                                 color: Colors.white, size: 20),
-                            onPressed: () => provider.refresh(),
+                            onPressed: () {
+                              provider.refresh();
+                              friendProvider.loadFriends();
+                              friendProvider.loadAllUsers();
+                            },
                           ),
                         ),
                       ],
@@ -110,8 +123,9 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
                       labelColor: Colors.white,
                       unselectedLabelColor: Colors.white60,
                       labelStyle: const TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 16),
+                          fontWeight: FontWeight.w600, fontSize: 13),
                       tabs: const [
+                        Tab(text: 'My Friends'),
                         Tab(text: 'Incoming'),
                         Tab(text: 'Sent'),
                       ],
@@ -119,27 +133,40 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
                   ),
                   const SizedBox(height: 16),
                   Expanded(
-                    child: provider.isLoading
+                    child: provider.isLoading || friendProvider.isLoading
                         ? const Center(child: CircularProgressIndicator())
-                        : provider.error != null
-                            ? Center(
-                                child: Text(provider.error!,
-                                    style:
-                                        const TextStyle(color: Colors.white)))
-                            : TabBarView(
-                                children: [
-                                  _RequestsList(
-                                    items: provider.incoming,
-                                    type: RequestType.incoming,
-                                    onAccept: (id) => provider.accept(id),
-                                    onReject: (id) => provider.reject(id),
-                                  ),
-                                  _RequestsList(
-                                    items: provider.outgoing,
-                                    type: RequestType.outgoing,
-                                  ),
-                                ],
+                        : TabBarView(
+                            children: [
+                              // My Friends
+                              _FriendList(
+                                friends: friendProvider.friends,
+                                onUnfriend: (uid) =>
+                                    friendProvider.removeFriendByUserId(uid),
                               ),
+                              // Incoming
+                              provider.error != null
+                                  ? Center(
+                                      child: Text(provider.error!,
+                                          style: const TextStyle(
+                                              color: Colors.white)))
+                                  : _RequestsList(
+                                      items: provider.incoming,
+                                      type: RequestType.incoming,
+                                      onAccept: (id) => provider.accept(id),
+                                      onReject: (id) => provider.reject(id),
+                                    ),
+                              // Sent
+                              provider.error != null
+                                  ? Center(
+                                      child: Text(provider.error!,
+                                          style: const TextStyle(
+                                              color: Colors.white)))
+                                  : _RequestsList(
+                                      items: provider.outgoing,
+                                      type: RequestType.outgoing,
+                                    ),
+                            ],
+                          ),
                   ),
                 ],
               ),
@@ -216,6 +243,178 @@ class _RequestsList extends StatelessWidget {
           onReject: () => onReject?.call(id),
         );
       },
+    );
+  }
+}
+
+class _FriendList extends StatelessWidget {
+  final List<Map<String, dynamic>> friends;
+  final Function(int) onUnfriend;
+
+  const _FriendList({
+    required this.friends,
+    required this.onUnfriend,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (friends.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.people_outline,
+              size: 80,
+              color: Colors.white.withOpacity(0.2),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No friends yet',
+              style:
+                  TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 18),
+            ),
+          ],
+        ),
+      );
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: friends.length,
+      itemBuilder: (context, index) {
+        final f = friends[index];
+        final username = f['username']?.toString() ?? 'Unknown';
+        final id = f['id'] as int;
+        String? profileImage = f['profile_image'];
+
+        // Clean up URL if needed
+        if (profileImage != null) {
+          if (profileImage.startsWith('file://')) {
+            profileImage = profileImage.replaceAll('file://', '');
+          }
+          if (!profileImage.startsWith('http')) {
+            profileImage = '${AppConstants.baseUrl}$profileImage';
+          }
+        }
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0F3156).withOpacity(0.8),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFF4A90E2), width: 2),
+                  color: const Color(0xFF1E293B),
+                ),
+                child: ClipOval(
+                  child: profileImage != null
+                      ? Image.network(
+                          profileImage,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Center(
+                              child: Text(
+                                username.isNotEmpty
+                                    ? username[0].toUpperCase()
+                                    : '?',
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20),
+                              ),
+                            );
+                          },
+                        )
+                      : Center(
+                          child: Text(
+                            username.isNotEmpty
+                                ? username[0].toUpperCase()
+                                : '?',
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20),
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  username,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.message, color: Color(0xFF4A90E2)),
+                tooltip: 'Message',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChatScreen(otherUserId: id),
+                    ),
+                  );
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.person_remove, color: Colors.redAccent),
+                tooltip: 'Unfriend',
+                onPressed: () => _confirmUnfriend(context, username, id),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _confirmUnfriend(BuildContext context, String username, int id) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF0F3156),
+        title: const Text('Unfriend', style: TextStyle(color: Colors.white)),
+        content: Text(
+          'Are you sure you want to remove $username from friends?',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child:
+                const Text('Cancel', style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              onUnfriend(id);
+            },
+            child: const Text('Unfriend',
+                style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
     );
   }
 }

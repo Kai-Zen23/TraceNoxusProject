@@ -5,6 +5,7 @@ import '../providers/message_provider.dart';
 import '../widgets/styled_back_button.dart';
 import '../providers/auth_provider.dart';
 import '../providers/friend_provider.dart';
+import '../providers/friend_requests_provider.dart';
 import 'chat_screen.dart';
 import '../core/constants/app_constants.dart';
 import 'other_user_profile_screen.dart';
@@ -26,9 +27,12 @@ class _MessagesScreenState extends State<MessagesScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = Provider.of<AuthProvider>(context, listen: false);
       final msgProvider = Provider.of<MessageProvider>(context, listen: false);
+      final friendPrivider =
+          Provider.of<FriendProvider>(context, listen: false);
       msgProvider.setSelf(auth);
       msgProvider.loadAllConversations();
-      Provider.of<FriendProvider>(context, listen: false).loadAllUsers();
+      friendPrivider.loadAllUsers();
+      friendPrivider.loadFriends();
     });
     _searchController.addListener(() {
       setState(() {
@@ -507,9 +511,23 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     Navigator.pop(context);
                     await friendProvider.addFriend(userId);
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Added $name as friend')),
-                      );
+                      if (friendProvider.error != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(friendProvider.error!),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      } else {
+                        // Refresh requests provider so Sent tab is updated
+                        Provider.of<FriendRequestsProvider>(context,
+                                listen: false)
+                            .refresh();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text('Friend request sent to $name')),
+                        );
+                      }
                     }
                   },
                 ),

@@ -1,5 +1,5 @@
-// d:\Software Engineering Project\TraceNoxusProject\TraceNoxus-FrontEnd\lib\providers\friend_provider.dart
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import '../services/friend_service.dart';
 
 class FriendProvider extends ChangeNotifier {
@@ -12,38 +12,80 @@ class FriendProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   List<Map<String, dynamic>> get allUsers => _allUsers;
-  Set<int> get friendIds => _friendRecords.map((e) => e['friend'] as int).toSet();
-  
+  Set<int> get friendIds =>
+      _friendRecords.map((e) => e['friend'] as int).toSet();
+
   List<Map<String, dynamic>> get friends {
     final ids = friendIds;
     return _allUsers.where((u) => ids.contains(u['id'])).toList();
   }
 
   Future<void> loadAllUsers() async {
-    _isLoading = true; _error = null; notifyListeners();
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
     try {
       _allUsers = await _service.fetchAllUsers();
-    } catch (e) { _error = 'Failed to load users: $e'; }
-    _isLoading = false; notifyListeners();
+    } catch (e) {
+      _error = 'Failed to load users: $e';
+    }
+    _isLoading = false;
+    notifyListeners();
   }
 
   Future<void> loadFriends() async {
-    _isLoading = true; _error = null; notifyListeners();
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
     try {
       _friendRecords = await _service.fetchFriends();
-    } catch (e) { _error = 'Failed to load friends'; }
-    _isLoading = false; notifyListeners();
+    } catch (e) {
+      _error = 'Failed to load friends';
+    }
+    _isLoading = false;
+    notifyListeners();
   }
 
   Future<void> addFriend(int userId) async {
-    await _service.addFriend(userId);
-    await loadFriends();
+    try {
+      await _service.addFriend(userId);
+      await loadFriends();
+    } on DioException catch (e) {
+      print('DioError adding friend: ${e.message}');
+      if (e.response != null) {
+        print('Response data: ${e.response?.data}');
+      }
+      _error = 'Failed to add friend: ${e.response?.statusCode}';
+      notifyListeners();
+    } catch (e) {
+      print('Error adding friend: $e');
+      _error = 'Failed to add friend';
+      notifyListeners();
+    }
   }
 
   Future<void> removeFriendByUserId(int userId) async {
-    final rec = _friendRecords.firstWhere((r) => r['friend'] == userId, orElse: () => {});
-    if (rec.isEmpty) return;
-    await _service.removeFriend(rec['id'] as int);
-    await loadFriends();
+    try {
+      final rec = _friendRecords.firstWhere((r) => r['friend'] == userId,
+          orElse: () => {});
+      if (rec.isEmpty) {
+        print('Error: No friendship record found for user $userId');
+        return;
+      }
+      print('DEBUG: Removing friendship. Record: $rec');
+      await _service.removeFriend(rec['id'] as int);
+      await loadFriends();
+    } on DioException catch (e) {
+      print('DioError removing friend: ${e.message}');
+      if (e.response != null) {
+        print('Response data: ${e.response?.data}');
+      }
+      _error = 'Failed to remove friend: ${e.response?.statusCode}';
+      notifyListeners();
+    } catch (e) {
+      print('Error removing friend: $e');
+      _error = 'Failed to remove friend';
+      notifyListeners();
+    }
   }
 }
