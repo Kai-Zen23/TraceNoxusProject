@@ -5,6 +5,7 @@ import 'package:TraceNoxus/providers/auth_provider.dart';
 import 'package:TraceNoxus/providers/friend_provider.dart';
 import 'package:TraceNoxus/providers/room_chat_provider.dart';
 import 'package:TraceNoxus/core/utils/message_date_utils.dart';
+import '../widgets/styled_back_button.dart';
 import 'other_user_profile_screen.dart';
 import 'package:TraceNoxus/core/constants/app_constants.dart';
 
@@ -29,7 +30,7 @@ class _TeamChatScreenState extends State<TeamChatScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       context.read<FriendProvider>().loadAllUsers();
-      
+
       final chat = context.read<RoomChatProvider>();
       chat.setSelf(context.read<AuthProvider>());
       // Load history first
@@ -177,84 +178,48 @@ class _ChatListView extends StatelessWidget {
         final displayName =
             (message.senderName ?? friend['username'] ?? fallback).toString();
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Row(
-            mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (!isMe) ...[
-                 GestureDetector(
-                   onTap: () => _showProfile(context, friend),
-                   child: _buildAvatar(message, friend, displayName),
-                 ),
-                 const SizedBox(width: 8),
-              ],
-              Flexible(
-                  child: GestureDetector(
-                    onLongPress: isMe ? () {
-                      showDialog(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          title: const Text('Delete Message'),
-                          content: const Text('Are you sure you want to delete this message?'),
-                          actions: [
-                            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-                            TextButton(
-                              onPressed: () {
-                                context.read<RoomChatProvider>().deleteMessage(message.id);
-                                Navigator.pop(ctx);
-                              },
-                              child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                            ),
-                          ],
-                        ),
-                      );
-                    } : null,
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      constraints: const BoxConstraints(maxWidth: 280),
-                      decoration: BoxDecoration(
-                        color: isMe
-                            ? const Color(0xFF4BA3C3).withOpacity(0.9)
-                            : Colors.black.withOpacity(0.35),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        crossAxisAlignment:
-                            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                               if (!isMe) _showProfile(context, friend);
-                            },
-                            child: Text(
-                              displayName,
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            message.content,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                          const SizedBox(height: 2),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Text(
-                              formatMessageTimestamp(message.timestamp),
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.5),
-                                fontSize: 10,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+        return Align(
+          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 6),
+            padding: const EdgeInsets.all(12),
+            constraints: const BoxConstraints(maxWidth: 280),
+            decoration: BoxDecoration(
+              color: isMe
+                  ? const Color(0xFF4BA3C3).withOpacity(0.9)
+                  : Colors.black.withOpacity(0.35),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment:
+                  isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    if (!isMe) _showProfile(context, friend);
+                  },
+                  child: Text(
+                    displayName,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  message.content,
+                  style: const TextStyle(color: Colors.white),
+                ),
+                const SizedBox(height: 2),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    formatMessageTimestamp(message.timestamp),
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.5),
+                      fontSize: 10,
                     ),
                   ),
               ),
@@ -380,17 +345,10 @@ class _TeamChatHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(
-              Icons.chevron_left,
-              color: Color(0xFF88AEC9),
-              size: 32,
-            ),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
+          const StyledBackButton(),
           if (config.logoAsset != null)
             Padding(
-              padding: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.only(left: 8, right: 8),
               child: SizedBox(
                 width: 36,
                 height: 36,
@@ -411,27 +369,29 @@ class _TeamChatHeader extends StatelessWidget {
               ),
             ),
           Expanded(
-            child: Text(
-              config.name,
-              style: const TextStyle(
-                color: Color(0xFF88AEC9),
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 1.1,
+            child: Center(
+              child: Text(
+                config.name,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
           ),
           IconButton(
             icon: const Icon(
               Icons.call,
-              color: Color(0xFF88AEC9),
+              color: Colors.white,
             ),
             onPressed: () {},
           ),
           IconButton(
             icon: const Icon(
               Icons.videocam,
-              color: Color(0xFF88AEC9),
+              color: Colors.white,
             ),
             onPressed: () {},
           ),
@@ -576,4 +536,3 @@ const List<TeamChatConfig> teamChatConfigs = [
     bypassAccess: true,
   ),
 ];
-

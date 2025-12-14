@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/friend_requests_provider.dart';
+import '../widgets/styled_back_button.dart';
 import '../providers/friend_provider.dart';
 import 'chat_screen.dart';
 
@@ -33,23 +34,24 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
             child: Image.asset(
               'assets/image/background_user.png',
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0E1C2C)),
+              errorBuilder: (_, __, ___) =>
+                  Container(color: const Color(0xFF0E1C2C)),
             ),
           ),
           Positioned.fill(
-             child: Container(
-               decoration: BoxDecoration(
-                 gradient: LinearGradient(
-                   begin: Alignment.topCenter,
-                   end: Alignment.bottomCenter,
-                   colors: [
-                     Colors.black.withOpacity(0.6),
-                     Colors.transparent,
-                     Colors.black.withOpacity(0.8),
-                   ],
-                 ),
-               ),
-             ),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.6),
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.8),
+                  ],
+                ),
+              ),
+            ),
           ),
           SafeArea(
             child: DefaultTabController(
@@ -57,43 +59,33 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
               child: Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
                     child: Row(
                       children: [
+                        const StyledBackButton(),
+                        Expanded(
+                          child: Center(
+                            child: const Text(
+                              'Friend Requests',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ),
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
+                            shape: BoxShape.circle,
                           ),
                           child: IconButton(
-                            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        const Text(
-                          'Friends', // Changed title
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        const Spacer(),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: IconButton(
-                            icon: const Icon(Icons.refresh, color: Colors.white, size: 20),
-                            onPressed: () {
-                               Provider.of<FriendRequestsProvider>(context, listen: false).refresh();
-                               final fp = Provider.of<FriendProvider>(context, listen: false);
-                               fp.loadFriends();
-                               fp.loadAllUsers();
-                            },
+                            icon: const Icon(Icons.refresh,
+                                color: Colors.white, size: 20),
+                            onPressed: () => provider.refresh(),
                           ),
                         ),
                       ],
@@ -122,7 +114,8 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
                       ),
                       labelColor: Colors.white,
                       unselectedLabelColor: Colors.white60,
-                      labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13), // Reduced font size to fit 3 tabs
+                      labelStyle: const TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 16),
                       tabs: const [
                         Tab(text: 'My Friends'),
                         Tab(text: 'Incoming'),
@@ -135,99 +128,24 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
                     child: provider.isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : provider.error != null
-                        ? Center(child: Text(provider.error!, style: const TextStyle(color: Colors.white)))
-                        : TabBarView(
-                      children: [
-                        // Tab 1: My Friends
-                        Consumer<FriendProvider>(
-                          builder: (context, friendProvider, _) {
-                            final friends = friendProvider.friends; // Assuming friends list is available
-                            if (friendProvider.isLoading) return const Center(child: CircularProgressIndicator());
-                            
-                            if (friends.isEmpty) {
-                              return Center(
-                                child: Text('No friends yet', style: TextStyle(color: Colors.white.withOpacity(0.5))),
-                              );
-                            }
-
-                            return ListView.builder(
-                              padding: const EdgeInsets.all(16),
-                              itemCount: friends.length,
-                              itemBuilder: (context, index) {
-                                final f = friends[index];
-                                return Container(
-                                  margin: const EdgeInsets.only(bottom: 12),
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF0F3156).withOpacity(0.8),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: Colors.white.withOpacity(0.1)),
+                            ? Center(
+                                child: Text(provider.error!,
+                                    style:
+                                        const TextStyle(color: Colors.white)))
+                            : TabBarView(
+                                children: [
+                                  _RequestsList(
+                                    items: provider.incoming,
+                                    type: RequestType.incoming,
+                                    onAccept: (id) => provider.accept(id),
+                                    onReject: (id) => provider.reject(id),
                                   ),
-                                  child: Row(
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 20,
-                                        backgroundImage: f['profile_image'] != null 
-                                            ? NetworkImage(f['profile_image']) 
-                                            : null,
-                                        child: f['profile_image'] == null 
-                                            ? Text((f['username'] ?? '?')[0].toUpperCase()) 
-                                            : null,
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: Text(
-                                          f['username'] ?? 'User',
-                                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.chat_bubble_outline, color: Colors.white70),
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context, 
-                                            MaterialPageRoute(builder: (_) => ChatScreen(otherUserId: f['id']))
-                                          );
-                                        },
-                                      )
-                                    ],
+                                  _RequestsList(
+                                    items: provider.outgoing,
+                                    type: RequestType.outgoing,
                                   ),
-                                );
-                              },
-                            );
-                          },
-                        ),
-
-                        // Tab 2: Incoming
-                        _RequestsList(
-                          items: provider.incoming,
-                          type: RequestType.incoming,
-                          onAccept: (id) async {
-                            final request = provider.incoming.firstWhere((r) => r['id'] == id, orElse: () => {});
-                            final username = request['sender_username'] ?? 'User';
-                            
-                            await provider.accept(id);
-                             Provider.of<FriendProvider>(context, listen: false).loadFriends(); // Refresh friends list
-
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text("Friendship unlocked! You’re now friends with $username"),
-                                  backgroundColor: const Color(0xFF4A90E2),
-                                ),
-                              );
-                            }
-                          },
-                          onReject: (id) => provider.reject(id),
-                        ),
-
-                        // Tab 3: Sent
-                        _RequestsList(
-                          items: provider.outgoing,
-                          type: RequestType.outgoing,
-                        ),
-                      ],
-                    ),
+                                ],
+                              ),
                   ),
                 ],
               ),
@@ -269,8 +187,11 @@ class _RequestsList extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              type == RequestType.incoming ? 'No pending requests' : 'No sent requests',
-              style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 18),
+              type == RequestType.incoming
+                  ? 'No pending requests'
+                  : 'No sent requests',
+              style:
+                  TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 18),
             ),
           ],
         ),
@@ -284,11 +205,15 @@ class _RequestsList extends StatelessWidget {
         final id = r['id'] as int;
         // Use username if available, fallback to ID, then 'Unknown'
         final username = type == RequestType.incoming
-            ? (r['sender_username']?.toString() ?? r['sender']?.toString() ?? 'Unknown')
-            : (r['receiver_username']?.toString() ?? r['receiver']?.toString() ?? 'Unknown');
-        
+            ? (r['sender_username']?.toString() ??
+                r['sender']?.toString() ??
+                'Unknown')
+            : (r['receiver_username']?.toString() ??
+                r['receiver']?.toString() ??
+                'Unknown');
+
         final status = r['status']?.toString() ?? 'pending';
-        
+
         return _RequestCard(
           username: username,
           status: status,
@@ -347,7 +272,10 @@ class _RequestCard extends StatelessWidget {
                   backgroundColor: const Color(0xFF1E293B),
                   child: Text(
                     username.isNotEmpty ? username[0].toUpperCase() : '?',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20),
                   ),
                 ),
               ),
@@ -390,10 +318,12 @@ class _RequestCard extends StatelessWidget {
                       backgroundColor: const Color(0xFF4A90E2),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       elevation: 0,
                     ),
-                    child: const Text('Confirm', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text('Confirm',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -403,8 +333,9 @@ class _RequestCard extends StatelessWidget {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
                       side: BorderSide(color: Colors.white.withOpacity(0.3)),
-                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                     child: const Text('Delete'),
                   ),
