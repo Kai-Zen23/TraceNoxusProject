@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/notification_provider.dart';
+import '../widgets/styled_back_button.dart';
 import '../providers/auth_provider.dart';
 import '../models/notification_model.dart';
 
@@ -17,7 +18,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<NotificationProvider>(context, listen: false).fetchNotifications();
+      Provider.of<NotificationProvider>(context, listen: false)
+          .fetchNotifications();
     });
   }
 
@@ -30,7 +32,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF0F3156),
-        title: const Text('Send Notification', style: TextStyle(color: Colors.white)),
+        title: const Text('Send Notification',
+            style: TextStyle(color: Colors.white)),
         content: Form(
           key: formKey,
           child: Column(
@@ -42,9 +45,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Title',
                   labelStyle: TextStyle(color: Colors.white70),
-                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                  enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white24)),
                 ),
-                validator: (value) => value == null || value.isEmpty ? 'Please enter a title' : null,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Please enter a title'
+                    : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -54,9 +60,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Message',
                   labelStyle: TextStyle(color: Colors.white70),
-                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                  enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white24)),
                 ),
-                validator: (value) => value == null || value.isEmpty ? 'Please enter a message' : null,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Please enter a message'
+                    : null,
               ),
             ],
           ),
@@ -64,18 +73,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+            child:
+                const Text('Cancel', style: TextStyle(color: Colors.white70)),
           ),
           ElevatedButton(
             onPressed: () async {
               if (formKey.currentState!.validate()) {
                 try {
-                  await Provider.of<NotificationProvider>(context, listen: false)
-                      .sendNotification(titleController.text, messageController.text);
+                  await Provider.of<NotificationProvider>(context,
+                          listen: false)
+                      .sendNotification(
+                          titleController.text, messageController.text);
                   if (context.mounted) {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Notification sent successfully')),
+                      const SnackBar(
+                          content: Text('Notification sent successfully')),
                     );
                   }
                 } catch (e) {
@@ -95,7 +108,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  Map<String, List<NotificationModel>> _groupNotifications(List<NotificationModel> notifications) {
+  Map<String, List<NotificationModel>> _groupNotifications(
+      List<NotificationModel> notifications) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
@@ -139,7 +153,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             child: Image.asset(
               'assets/image/background_user.png',
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0E1C2C)),
+              errorBuilder: (_, __, ___) =>
+                  Container(color: const Color(0xFF0E1C2C)),
             ),
           ),
           Positioned.fill(
@@ -150,22 +165,25 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.chevron_left, color: Color(0xFF88AEC9), size: 32),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'ANNOUNCEMENT',
-                        style: TextStyle(
-                          color: Color(0xFF88AEC9),
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
+                      const StyledBackButton(),
+                      Expanded(
+                        child: Center(
+                          child: const Text(
+                            'Announcement',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
                         ),
                       ),
+                      const SizedBox(width: 48), // Balance the back button
                     ],
                   ),
                 ),
@@ -177,38 +195,59 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       }
 
                       if (provider.error != null) {
-                        return Center(child: Text('Error: ${provider.error}', style: const TextStyle(color: Colors.red)));
+                        return Center(
+                            child: Text('Error: ${provider.error}',
+                                style: const TextStyle(color: Colors.red)));
                       }
 
                       if (provider.notifications.isEmpty) {
-                        return const Center(child: Text('No notifications', style: TextStyle(color: Colors.white70)));
+                        return const Center(
+                            child: Text('No notifications',
+                                style: TextStyle(color: Colors.white70)));
                       }
 
-                      final grouped = _groupNotifications(provider.notifications);
+                      final grouped =
+                          _groupNotifications(provider.notifications);
 
                       return ListView(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
                         children: [
                           if (grouped['Today']!.isNotEmpty) ...[
                             const Padding(
                               padding: EdgeInsets.symmetric(vertical: 8),
-                              child: Text('Today', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                              child: Text('Today',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold)),
                             ),
-                            ...grouped['Today']!.map((n) => _NotificationItem(notification: n)),
+                            ...grouped['Today']!
+                                .map((n) => _NotificationItem(notification: n)),
                           ],
                           if (grouped['Yesterday']!.isNotEmpty) ...[
                             const Padding(
                               padding: EdgeInsets.symmetric(vertical: 8),
-                              child: Text('Yesterday', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                              child: Text('Yesterday',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold)),
                             ),
-                            ...grouped['Yesterday']!.map((n) => _NotificationItem(notification: n)),
+                            ...grouped['Yesterday']!
+                                .map((n) => _NotificationItem(notification: n)),
                           ],
                           if (grouped['Older']!.isNotEmpty) ...[
                             const Padding(
                               padding: EdgeInsets.symmetric(vertical: 8),
-                              child: Text('Older', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                              child: Text('Older',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold)),
                             ),
-                            ...grouped['Older']!.map((n) => _NotificationItem(notification: n)),
+                            ...grouped['Older']!
+                                .map((n) => _NotificationItem(notification: n)),
                           ],
                         ],
                       );
@@ -248,14 +287,18 @@ class _NotificationItem extends StatelessWidget {
               Expanded(
                 child: Text(
                   notification.title,
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600),
                 ),
               ),
               if (!notification.isRead)
                 Container(
                   width: 8,
                   height: 8,
-                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                  decoration: const BoxDecoration(
+                      color: Colors.red, shape: BoxShape.circle),
                 ),
             ],
           ),

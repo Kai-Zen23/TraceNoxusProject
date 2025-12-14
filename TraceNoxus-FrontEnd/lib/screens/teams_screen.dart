@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/team_provider.dart'; // Import TeamProvider
+import '../widgets/styled_back_button.dart';
 import '../models/team_model.dart';
 import 'team_chat_screen.dart';
 import 'team_detail_screen.dart';
@@ -80,12 +81,15 @@ class _TeamsScreenState extends State<TeamsScreen> {
     final nameLower = team.name.toLowerCase();
     try {
       final preset = teamChatConfigs.firstWhere(
-        (c) => nameLower.contains(c.name.toLowerCase()) || c.name.toLowerCase().contains(nameLower),
+        (c) =>
+            nameLower.contains(c.name.toLowerCase()) ||
+            c.name.toLowerCase().contains(nameLower),
       );
       return TeamChatConfig(
         id: team.id.toString(), // Use backend ID
         name: team.name, // Use backend Name
-        channelId: 'team_${team.id}', // Unique channel ID for THIS specific team
+        channelId:
+            'team_${team.id}', // Unique channel ID for THIS specific team
         backgroundAsset: preset.backgroundAsset,
         accentColor: preset.accentColor,
         logoAsset: preset.logoAsset,
@@ -114,12 +118,13 @@ class _TeamsScreenState extends State<TeamsScreen> {
     });
 
     if (auth.isAdmin) {
-       // Navigate to Team Detail for Admin
-       Navigator.push(context, MaterialPageRoute(builder: (_) => TeamDetailScreen(team: team)));
+      // Navigate to Team Detail for Admin
+      Navigator.push(context,
+          MaterialPageRoute(builder: (_) => TeamDetailScreen(team: team)));
     } else {
-       // Navigate to Chat for Users
-       final config = _mapToConfig(team);
-       Navigator.push(
+      // Navigate to Chat for Users
+      final config = _mapToConfig(team);
+      Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => TeamChatScreen(config: config)),
       );
@@ -130,7 +135,7 @@ class _TeamsScreenState extends State<TeamsScreen> {
   Widget build(BuildContext context) {
     final spec = _TeamsSpec.fromWidth(MediaQuery.of(context).size.width);
     final auth = Provider.of<AuthProvider>(context);
-    
+
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
@@ -146,7 +151,11 @@ class _TeamsScreenState extends State<TeamsScreen> {
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [Color(0xFF1A2F4A), Color(0xFF2B4267), Color(0xFF1A3A5A)],
+                      colors: [
+                        Color(0xFF1A2F4A),
+                        Color(0xFF2B4267),
+                        Color(0xFF1A3A5A)
+                      ],
                     ),
                   ),
                 );
@@ -166,37 +175,46 @@ class _TeamsScreenState extends State<TeamsScreen> {
               children: [
                 // Header
                 Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: spec.horizontalPadding,
-                    vertical: spec.topSpacing,
-                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.chevron_left, color: Color(0xFF88AEC9), size: 32),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                      Text(
-                        'Teams',
-                        style: TextStyle(
-                          color: const Color(0xFF88AEC9),
-                          fontSize: spec.headerFontSize,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.2,
+                      const StyledBackButton(),
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            'Teams',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
                         ),
                       ),
-                       // Hide "Create" button if not admin
-                       // We can enable this once CreateTeamScreen is ready
-                       if (auth.isAdmin)
-                        IconButton(
-                          icon: const Icon(Icons.add, color: Color(0xFF88AEC9), size: 28),
-                          onPressed: () {
-                             Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateTeamScreen()));
-                          },
+                      // Hide "Create" button if not admin
+                      if (auth.isAdmin)
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.add,
+                                color: Colors.white, size: 20),
+                            onPressed: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) =>
+                                          const CreateTeamScreen()));
+                            },
+                          ),
                         )
-                       else
-                        const SizedBox(width: 28), // Placeholder to center title
+                      else
+                        const SizedBox(
+                            width: 48), // Placeholder to center title
                     ],
                   ),
                 ),
@@ -205,21 +223,22 @@ class _TeamsScreenState extends State<TeamsScreen> {
                   child: Consumer<TeamProvider>(
                     builder: (context, teamProvider, child) {
                       if (teamProvider.isLoading) {
-                        return const Center(child: CircularProgressIndicator(color: Color(0xFF88AEC9)));
+                        return const Center(
+                            child: CircularProgressIndicator(
+                                color: Color(0xFF88AEC9)));
                       }
-                      
+
                       final teams = teamProvider.teams;
-                      
+
                       if (teams.isEmpty) {
                         return Center(
-                           child: Text(
-                             auth.isAdmin 
-                               ? 'No teams yet.\nCreate one via Admin Panel.' 
-                               : 'You have not been assigned to a team yet.',
-                             textAlign: TextAlign.center,
-                             style: const TextStyle(color: Colors.white70),
-                           )
-                        );
+                            child: Text(
+                          auth.isAdmin
+                              ? 'No teams yet.\nCreate one via Admin Panel.'
+                              : 'You have not been assigned to a team yet.',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.white70),
+                        ));
                       }
 
                       return ListView.builder(
@@ -230,10 +249,11 @@ class _TeamsScreenState extends State<TeamsScreen> {
                         itemCount: teams.length,
                         itemBuilder: (context, index) {
                           final team = teams[index];
-                          final isSelected = _selectedTeamId == team.id.toString();
+                          final isSelected =
+                              _selectedTeamId == team.id.toString();
                           // Map to config just for display assets
                           final config = _mapToConfig(team);
-                          
+
                           return _TeamListItem(
                             team: team,
                             config: config,
@@ -286,7 +306,8 @@ class _TeamListItem extends StatelessWidget {
                 : Colors.white.withOpacity(0.08),
             borderRadius: BorderRadius.circular(16),
             border: isSelected
-                ? Border.all(color: const Color(0xFF88AEC9).withOpacity(0.5), width: 2)
+                ? Border.all(
+                    color: const Color(0xFF88AEC9).withOpacity(0.5), width: 2)
                 : Border.all(color: Colors.white.withOpacity(0.1), width: 1),
           ),
           child: Row(
@@ -301,9 +322,15 @@ class _TeamListItem extends StatelessWidget {
                           config.logoAsset!,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
-                              _LogoFallback(name: team.name, color: config.accentColor, spec: spec),
+                              _LogoFallback(
+                                  name: team.name,
+                                  color: config.accentColor,
+                                  spec: spec),
                         )
-                      : _LogoFallback(name: team.name, color: config.accentColor, spec: spec),
+                      : _LogoFallback(
+                          name: team.name,
+                          color: config.accentColor,
+                          spec: spec),
                 ),
               ),
               const SizedBox(width: 16),
@@ -313,7 +340,8 @@ class _TeamListItem extends StatelessWidget {
                   style: TextStyle(
                     color: const Color(0xFF88AEC9),
                     fontSize: spec.teamNameFontSize,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.normal,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -332,7 +360,8 @@ class _TeamListItem extends StatelessWidget {
 }
 
 class _LogoFallback extends StatelessWidget {
-  const _LogoFallback({required this.name, required this.color, required this.spec});
+  const _LogoFallback(
+      {required this.name, required this.color, required this.spec});
 
   final String name;
   final Color color;

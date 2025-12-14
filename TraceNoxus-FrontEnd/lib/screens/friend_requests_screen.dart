@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/friend_requests_provider.dart';
+import '../widgets/styled_back_button.dart';
 
 class FriendRequestsScreen extends StatefulWidget {
   const FriendRequestsScreen({super.key});
@@ -28,23 +29,24 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
             child: Image.asset(
               'assets/image/background_user.png',
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0E1C2C)),
+              errorBuilder: (_, __, ___) =>
+                  Container(color: const Color(0xFF0E1C2C)),
             ),
           ),
           Positioned.fill(
-             child: Container(
-               decoration: BoxDecoration(
-                 gradient: LinearGradient(
-                   begin: Alignment.topCenter,
-                   end: Alignment.bottomCenter,
-                   colors: [
-                     Colors.black.withOpacity(0.6),
-                     Colors.transparent,
-                     Colors.black.withOpacity(0.8),
-                   ],
-                 ),
-               ),
-             ),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.6),
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.8),
+                  ],
+                ),
+              ),
+            ),
           ),
           SafeArea(
             child: DefaultTabController(
@@ -52,37 +54,32 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
               child: Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
                     child: Row(
                       children: [
+                        const StyledBackButton(),
+                        Expanded(
+                          child: Center(
+                            child: const Text(
+                              'Friend Requests',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ),
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: IconButton(
-                            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        const Text(
-                          'Friend Requests',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        const Spacer(),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: IconButton(
-                            icon: const Icon(Icons.refresh, color: Colors.white, size: 20),
+                            icon: const Icon(Icons.refresh,
+                                color: Colors.white, size: 20),
                             onPressed: () => provider.refresh(),
                           ),
                         ),
@@ -112,7 +109,8 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
                       ),
                       labelColor: Colors.white,
                       unselectedLabelColor: Colors.white60,
-                      labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                      labelStyle: const TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 16),
                       tabs: const [
                         Tab(text: 'Incoming'),
                         Tab(text: 'Sent'),
@@ -124,21 +122,24 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
                     child: provider.isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : provider.error != null
-                        ? Center(child: Text(provider.error!, style: const TextStyle(color: Colors.white)))
-                        : TabBarView(
-                      children: [
-                        _RequestsList(
-                          items: provider.incoming,
-                          type: RequestType.incoming,
-                          onAccept: (id) => provider.accept(id),
-                          onReject: (id) => provider.reject(id),
-                        ),
-                        _RequestsList(
-                          items: provider.outgoing,
-                          type: RequestType.outgoing,
-                        ),
-                      ],
-                    ),
+                            ? Center(
+                                child: Text(provider.error!,
+                                    style:
+                                        const TextStyle(color: Colors.white)))
+                            : TabBarView(
+                                children: [
+                                  _RequestsList(
+                                    items: provider.incoming,
+                                    type: RequestType.incoming,
+                                    onAccept: (id) => provider.accept(id),
+                                    onReject: (id) => provider.reject(id),
+                                  ),
+                                  _RequestsList(
+                                    items: provider.outgoing,
+                                    type: RequestType.outgoing,
+                                  ),
+                                ],
+                              ),
                   ),
                 ],
               ),
@@ -180,8 +181,11 @@ class _RequestsList extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              type == RequestType.incoming ? 'No pending requests' : 'No sent requests',
-              style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 18),
+              type == RequestType.incoming
+                  ? 'No pending requests'
+                  : 'No sent requests',
+              style:
+                  TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 18),
             ),
           ],
         ),
@@ -195,11 +199,15 @@ class _RequestsList extends StatelessWidget {
         final id = r['id'] as int;
         // Use username if available, fallback to ID, then 'Unknown'
         final username = type == RequestType.incoming
-            ? (r['sender_username']?.toString() ?? r['sender']?.toString() ?? 'Unknown')
-            : (r['receiver_username']?.toString() ?? r['receiver']?.toString() ?? 'Unknown');
-        
+            ? (r['sender_username']?.toString() ??
+                r['sender']?.toString() ??
+                'Unknown')
+            : (r['receiver_username']?.toString() ??
+                r['receiver']?.toString() ??
+                'Unknown');
+
         final status = r['status']?.toString() ?? 'pending';
-        
+
         return _RequestCard(
           username: username,
           status: status,
@@ -258,7 +266,10 @@ class _RequestCard extends StatelessWidget {
                   backgroundColor: const Color(0xFF1E293B),
                   child: Text(
                     username.isNotEmpty ? username[0].toUpperCase() : '?',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20),
                   ),
                 ),
               ),
@@ -301,10 +312,12 @@ class _RequestCard extends StatelessWidget {
                       backgroundColor: const Color(0xFF4A90E2),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       elevation: 0,
                     ),
-                    child: const Text('Confirm', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text('Confirm',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -314,8 +327,9 @@ class _RequestCard extends StatelessWidget {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
                       side: BorderSide(color: Colors.white.withOpacity(0.3)),
-                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                     child: const Text('Delete'),
                   ),
