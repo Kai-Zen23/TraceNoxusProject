@@ -143,7 +143,7 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
                         itemCount: provider.announcements.length,
                         itemBuilder: (context, index) {
                           final announcement = provider.announcements[index];
-                          return _buildAnnouncementCard(announcement);
+                          return _buildAnnouncementCard(context, announcement);
                         },
                       );
                     },

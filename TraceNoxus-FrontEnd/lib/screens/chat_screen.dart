@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
+
 import '../core/utils/message_date_utils.dart';
 import '../providers/message_provider.dart';
 import '../providers/auth_provider.dart';

@@ -229,6 +229,7 @@ class _ChatListView extends StatelessWidget {
               ],
             ],
           ),
+          ),
         );
       },
     );
