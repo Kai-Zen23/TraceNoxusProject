@@ -17,16 +17,17 @@ class _IntroVideoScreenState extends State<IntroVideoScreen> {
 
     _controller = VideoPlayerController.asset('assets/videos/intro1.mp4')
       ..initialize().then((_) {
-        setState(() {}); // Ensure the first frame is shown after the video is initialized
+        setState(
+            () {}); // Ensure the first frame is shown after the video is initialized
         _controller.play();
       });
 
     // Go to next page after video ends
     _controller.addListener(() {
-      if (_controller.value.isInitialized && 
+      if (_controller.value.isInitialized &&
           _controller.value.position >= _controller.value.duration) {
         // Use pushReplacementNamed so the user can't go back to the video
-        Navigator.pushReplacementNamed(context, '/home'); 
+        Navigator.pushReplacementNamed(context, '/home');
       }
     });
   }

@@ -198,7 +198,7 @@ class _TeamsScreenState extends State<TeamsScreen> {
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
+                            shape: BoxShape.circle,
                           ),
                           child: IconButton(
                             icon: const Icon(Icons.add,

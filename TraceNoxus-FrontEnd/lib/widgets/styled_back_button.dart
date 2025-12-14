@@ -10,7 +10,7 @@ class StyledBackButton extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        shape: BoxShape.circle,
       ),
       child: IconButton(
         icon:

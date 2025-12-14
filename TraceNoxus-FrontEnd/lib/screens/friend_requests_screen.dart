@@ -75,7 +75,7 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
+                            shape: BoxShape.circle,
                           ),
                           child: IconButton(
                             icon: const Icon(Icons.refresh,
