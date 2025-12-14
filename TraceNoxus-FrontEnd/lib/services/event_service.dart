@@ -37,7 +37,8 @@ class EventService {
         throw Exception('Failed to load events: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      throw Exception(e.response?.data['detail'] ?? 'Server error: ${e.message}');
+      throw Exception(
+          e.response?.data['detail'] ?? 'Server error: ${e.message}');
     } catch (e) {
       throw Exception('Unexpected error: $e');
     }
@@ -46,30 +47,21 @@ class EventService {
   Future<EventModel> createEvent(Map<String, dynamic> eventData) async {
     try {
       final token = await _getToken();
-      
-      // Handle image upload if present (multipart/form-data)
-      FormData formData;
-      if (eventData.containsKey('background_image') && eventData['background_image'] != null) {
-         // If we were handling file uploads, we'd do it here. 
-         // For now, let's assume JSON or handle file path if needed.
-         // Given the complexity of file upload in Flutter/Dio, let's start with JSON 
-         // and assume image is handled separately or as base64 if needed, 
-         // but standard Dio FormData is best for files.
-         // However, the UI design implies picking an image.
-         // Let's stick to JSON for simple fields first, or use FormData if we have a file path.
-         
-         // For simplicity in this step, I'll send JSON. 
-         // If image upload is required, I'll need to adjust to FormData.
-         // The backend expects multipart for ImageField usually if sending file.
-         // Let's use FormData to be safe if we have a file.
-         
-         formData = FormData.fromMap(eventData);
-         // Note: File handling needs MultipartFile.fromFile. 
-         // I will assume the provider handles the conversion to MultipartFile if needed.
-      } else {
-        // If no file, JSON is fine, but FormData is also fine.
-        formData = FormData.fromMap(eventData);
+
+      final data = Map<String, dynamic>.from(eventData);
+
+      // Handle image upload
+      if (data.containsKey('background_image') &&
+          data['background_image'] != null) {
+        if (data['background_image'] is String) {
+          final String path = data['background_image'];
+          if (path.isNotEmpty) {
+            data['background_image'] = await MultipartFile.fromFile(path);
+          }
+        }
       }
+
+      final formData = FormData.fromMap(data);
 
       final response = await _dio.post(
         '/api/events/',
@@ -77,7 +69,6 @@ class EventService {
         options: Options(
           headers: {
             'Authorization': 'Bearer $token',
-            // Content-Type is set automatically by Dio for FormData
           },
         ),
       );
@@ -88,21 +79,30 @@ class EventService {
         throw Exception('Failed to create event: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      throw Exception(e.response?.data['detail'] ?? 'Server error: ${e.message}');
+      throw Exception(
+          e.response?.data['detail'] ?? 'Server error: ${e.message}');
     } catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
+
   Future<EventModel> updateEvent(int id, Map<String, dynamic> eventData) async {
     try {
       final token = await _getToken();
-      
-      FormData formData;
-      if (eventData.containsKey('background_image') && eventData['background_image'] != null) {
-         formData = FormData.fromMap(eventData);
-      } else {
-        formData = FormData.fromMap(eventData);
+
+      final data = Map<String, dynamic>.from(eventData);
+
+      if (data.containsKey('background_image') &&
+          data['background_image'] != null) {
+        if (data['background_image'] is String) {
+          final String path = data['background_image'];
+          if (path.isNotEmpty) {
+            data['background_image'] = await MultipartFile.fromFile(path);
+          }
+        }
       }
+
+      final formData = FormData.fromMap(data);
 
       final response = await _dio.put(
         '/api/events/$id/',
@@ -120,7 +120,8 @@ class EventService {
         throw Exception('Failed to update event: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      throw Exception(e.response?.data['detail'] ?? 'Server error: ${e.message}');
+      throw Exception(
+          e.response?.data['detail'] ?? 'Server error: ${e.message}');
     } catch (e) {
       throw Exception('Unexpected error: $e');
     }

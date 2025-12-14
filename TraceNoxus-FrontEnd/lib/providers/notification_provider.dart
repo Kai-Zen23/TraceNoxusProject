@@ -16,8 +16,9 @@ class NotificationProvider with ChangeNotifier {
   List<NotificationModel> get notifications => _notifications;
   bool get isLoading => _isLoading;
   String? get error => _error;
-  
-  int get badgeCount => (_notifications.length - _seenCount).clamp(0, _notifications.length);
+
+  int get badgeCount =>
+      (_notifications.length - _seenCount).clamp(0, _notifications.length);
 
   void setUserId(int id) {
     _userId = id.toString();
@@ -26,7 +27,8 @@ class NotificationProvider with ChangeNotifier {
   Future<void> markAsSeen() async {
     _seenCount = _notifications.length;
     if (_userId != null) {
-      await _storage.write(key: 'seen_notifications_$_userId', value: _seenCount.toString());
+      await _storage.write(
+          key: 'seen_notifications_$_userId', value: _seenCount.toString());
     }
     notifyListeners();
   }
@@ -38,18 +40,22 @@ class NotificationProvider with ChangeNotifier {
 
     try {
       _notifications = await _notificationService.fetchNotifications();
-      
+
       if (_userId != null) {
-        final savedSeen = await _storage.read(key: 'seen_notifications_$_userId');
+        final savedSeen =
+            await _storage.read(key: 'seen_notifications_$_userId');
         if (savedSeen != null) {
           _seenCount = int.tryParse(savedSeen) ?? 0;
+        } else {
+          _seenCount = 0;
         }
       }
 
       if (_notifications.length < _seenCount) {
         _seenCount = _notifications.length;
         if (_userId != null) {
-          await _storage.write(key: 'seen_notifications_$_userId', value: _seenCount.toString());
+          await _storage.write(
+              key: 'seen_notifications_$_userId', value: _seenCount.toString());
         }
       }
     } catch (e) {
@@ -60,13 +66,15 @@ class NotificationProvider with ChangeNotifier {
     }
   }
 
-  Future<void> sendNotification(String title, String message, {int? recipientId}) async {
+  Future<void> sendNotification(String title, String message,
+      {int? recipientId}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final newNotification = await _notificationService.createNotification(title, message, recipientId: recipientId);
+      final newNotification = await _notificationService
+          .createNotification(title, message, recipientId: recipientId);
       // If we are sending to ourselves or broadcast, we might want to add it to the list locally.
       // But usually the sender doesn't receive their own notification unless it's broadcast?
       // The backend logic returns notifications where recipient=user OR recipient=null.

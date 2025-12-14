@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../providers/event_provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/event_model.dart';
+import '../widgets/styled_back_button.dart';
 
 class CreateEventScreen extends StatefulWidget {
   final EventModel? event; // Optional event for editing
@@ -21,7 +22,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
   late TextEditingController _locationController;
-  
+
   late DateTime _selectedDate;
   late TimeOfDay _selectedTime;
   late bool _isReminderOn;
@@ -32,14 +33,16 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     super.initState();
     final event = widget.event;
     _titleController = TextEditingController(text: event?.title ?? '');
-    _descriptionController = TextEditingController(text: event?.description ?? '');
+    _descriptionController =
+        TextEditingController(text: event?.description ?? '');
     _locationController = TextEditingController(text: event?.location ?? '');
-    
+
     if (event != null) {
       _selectedDate = DateFormat('yyyy-MM-dd').parse(event.date);
       // Parse time "HH:MM:SS"
       final timeParts = event.time.split(':');
-      _selectedTime = TimeOfDay(hour: int.parse(timeParts[0]), minute: int.parse(timeParts[1]));
+      _selectedTime = TimeOfDay(
+          hour: int.parse(timeParts[0]), minute: int.parse(timeParts[1]));
       _isReminderOn = event.isReminderOn;
     } else {
       _selectedDate = DateTime.now();
@@ -58,7 +61,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.gallery, maxWidth: 800);
+    final image =
+        await picker.pickImage(source: ImageSource.gallery, maxWidth: 800);
     if (image != null) {
       setState(() => _pickedImage = image);
     }
@@ -94,11 +98,12 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final eventProvider = Provider.of<EventProvider>(context, listen: false);
-    
+
     // Format date and time for backend
     final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
     // Format time as HH:MM:SS
-    final timeStr = '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}:00';
+    final timeStr =
+        '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}:00';
 
     final Map<String, dynamic> eventData = {
       'title': _titleController.text.trim(),
@@ -110,7 +115,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     };
 
     if (_pickedImage != null) {
-      // Handle image if needed
+      eventData['background_image'] = _pickedImage!.path;
     }
 
     bool success;
@@ -124,12 +129,17 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(widget.event != null ? 'Event updated successfully' : 'Event created successfully')),
+        SnackBar(
+            content: Text(widget.event != null
+                ? 'Event updated successfully'
+                : 'Event created successfully')),
       );
       Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(eventProvider.error ?? 'Failed to save event'), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text(eventProvider.error ?? 'Failed to save event'),
+            backgroundColor: Colors.red),
       );
     }
   }
@@ -147,17 +157,31 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     }
 
     return Scaffold(
+      backgroundColor: const Color(0xFF0F172A),
+      resizeToAvoidBottomInset: false,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(widget.event != null ? 'Edit Event' : 'Create Event'),
-        backgroundColor: const Color(0xFF0F172A),
+        centerTitle: true,
+        leading: const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: StyledBackButton(),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        titleTextStyle: const TextStyle(
+            color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
       ),
       body: Stack(
+        fit: StackFit.expand,
         children: [
-           Positioned.fill(
+          Positioned.fill(
             child: Image.asset(
               'assets/image/background_user.png',
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0F172A)),
+              fit: BoxFit.fill,
+              errorBuilder: (_, __, ___) =>
+                  Container(color: const Color(0xFF0F172A)),
             ),
           ),
           SafeArea(
@@ -168,13 +192,16 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildTextField('Title', _titleController, validator: (v) => v!.isEmpty ? 'Required' : null),
+                    _buildTextField('Title', _titleController,
+                        validator: (v) => v!.isEmpty ? 'Required' : null),
                     const SizedBox(height: 16),
-                    _buildTextField('Description', _descriptionController, maxLines: 3),
+                    _buildTextField('Description', _descriptionController,
+                        maxLines: 3),
                     const SizedBox(height: 16),
-                    _buildTextField('Location', _locationController, validator: (v) => v!.isEmpty ? 'Required' : null),
+                    _buildTextField('Location', _locationController,
+                        validator: (v) => v!.isEmpty ? 'Required' : null),
                     const SizedBox(height: 16),
-                    
+
                     Row(
                       children: [
                         Expanded(
@@ -217,9 +244,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    
+
                     SwitchListTile(
-                      title: const Text('Reminder', style: TextStyle(color: Colors.white)),
+                      title: const Text('Reminder',
+                          style: TextStyle(color: Colors.white)),
                       value: _isReminderOn,
                       onChanged: (val) => setState(() => _isReminderOn = val),
                       activeColor: Colors.blue,
@@ -233,7 +261,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                         height: 150,
                         width: double.infinity,
                         decoration: BoxDecoration(
-                          color: Colors.white10,
+                          color: const Color(0xFF1E293B).withOpacity(0.8),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: Colors.white24),
                         ),
@@ -248,9 +276,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                             : Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: const [
-                                  Icon(Icons.add_photo_alternate, color: Colors.white54, size: 40),
+                                  Icon(Icons.add_photo_alternate,
+                                      color: Colors.white54, size: 40),
                                   SizedBox(height: 8),
-                                  Text('Add Background Image', style: TextStyle(color: Colors.white54)),
+                                  Text('Add Background Image',
+                                      style: TextStyle(color: Colors.white54)),
                                 ],
                               ),
                       ),
@@ -264,11 +294,18 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                         onPressed: eventProvider.isLoading ? null : _saveEvent,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
                         ),
                         child: eventProvider.isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : Text(widget.event != null ? 'Update Event' : 'Create Event', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            ? const CircularProgressIndicator(
+                                color: Colors.white)
+                            : Text(
+                                widget.event != null
+                                    ? 'Update Event'
+                                    : 'Create Event',
+                                style: const TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold)),
                       ),
                     ),
                   ],
@@ -281,7 +318,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {int maxLines = 1, String? Function(String?)? validator}) {
+  Widget _buildTextField(String label, TextEditingController controller,
+      {int maxLines = 1, String? Function(String?)? validator}) {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
@@ -291,9 +329,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         labelText: label,
         labelStyle: const TextStyle(color: Colors.white70),
         filled: true,
-        fillColor: Colors.white10,
+        fillColor: const Color(0xFF1E293B).withOpacity(0.8),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white24)),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.white24)),
       ),
     );
   }

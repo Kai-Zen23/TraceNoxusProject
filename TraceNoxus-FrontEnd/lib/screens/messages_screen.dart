@@ -225,7 +225,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   child: msgProvider.isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.only(
+                              left: 16,
+                              right: 16,
+                              bottom: 100), // Add bottom padding for navbar
                           itemCount: msgProvider.conversations.length,
                           itemBuilder: (context, index) {
                             final convo = msgProvider.conversations[index];
@@ -396,34 +399,53 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 ),
 
                 // Bottom Navigation Bar
-                Container(
-                  margin: const EdgeInsets.all(16),
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF3A8FB7),
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.people,
-                            color: Colors.white, size: 30),
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/teams');
-                        }, // Already on Messages
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.public,
-                            color: Colors.white70, size: 30),
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/general-chat');
-                        },
-                      ),
-                    ],
-                  ),
-                ),
               ],
+            ),
+          ),
+
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              margin: EdgeInsets.zero,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    const Color(0xFF4A90E2).withOpacity(0.9),
+                    const Color(0xFF002F6C).withOpacity(0.9),
+                  ],
+                ),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  IconButton(
+                    icon:
+                        const Icon(Icons.people, color: Colors.white, size: 30),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/teams');
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.public,
+                        color: Colors.white70, size: 30),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/general-chat');
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         ],

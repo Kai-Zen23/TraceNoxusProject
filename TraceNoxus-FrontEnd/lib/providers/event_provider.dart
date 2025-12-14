@@ -16,7 +16,7 @@ class EventProvider with ChangeNotifier {
   List<EventModel> get events => _events;
   bool get isLoading => _isLoading;
   String? get error => _error;
-  
+
   int get badgeCount => (_events.length - _seenCount).clamp(0, _events.length);
 
   void setUserId(int id) {
@@ -26,7 +26,8 @@ class EventProvider with ChangeNotifier {
   Future<void> markAsSeen() async {
     _seenCount = _events.length;
     if (_userId != null) {
-      await _storage.write(key: 'seen_events_$_userId', value: _seenCount.toString());
+      await _storage.write(
+          key: 'seen_events_$_userId', value: _seenCount.toString());
     }
     notifyListeners();
   }
@@ -38,18 +39,21 @@ class EventProvider with ChangeNotifier {
 
     try {
       _events = await _eventService.fetchEvents();
-      
+
       if (_userId != null) {
         final savedSeen = await _storage.read(key: 'seen_events_$_userId');
         if (savedSeen != null) {
           _seenCount = int.tryParse(savedSeen) ?? 0;
+        } else {
+          _seenCount = 0;
         }
       }
 
       if (_events.length < _seenCount) {
         _seenCount = _events.length;
         if (_userId != null) {
-          await _storage.write(key: 'seen_events_$_userId', value: _seenCount.toString());
+          await _storage.write(
+              key: 'seen_events_$_userId', value: _seenCount.toString());
         }
       }
     } catch (e) {
@@ -109,7 +113,8 @@ class EventProvider with ChangeNotifier {
       // Parse event.date (YYYY-MM-DD) and compare
       // Assuming event.date is "YYYY-MM-DD"
       // We can compare strings if we format the date
-      final dateString = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+      final dateString =
+          "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
       return event.date == dateString;
     }).toList();
   }

@@ -19,8 +19,9 @@ class FriendRequestsProvider extends ChangeNotifier {
   String? get error => _error;
   List<Map<String, dynamic>> get incoming => _incoming;
   List<Map<String, dynamic>> get outgoing => _outgoing;
-  
-  int get badgeCount => (_incoming.length - _seenCount).clamp(0, _incoming.length);
+
+  int get badgeCount =>
+      (_incoming.length - _seenCount).clamp(0, _incoming.length);
 
   void setUserId(int id) {
     _userId = id.toString();
@@ -29,7 +30,8 @@ class FriendRequestsProvider extends ChangeNotifier {
   Future<void> markAsSeen() async {
     _seenCount = _incoming.length;
     if (_userId != null) {
-      await _storage.write(key: 'seen_friends_$_userId', value: _seenCount.toString());
+      await _storage.write(
+          key: 'seen_friends_$_userId', value: _seenCount.toString());
     }
     notifyListeners();
   }
@@ -42,18 +44,21 @@ class FriendRequestsProvider extends ChangeNotifier {
     notifyListeners();
     try {
       await Future.wait([_loadIncoming(), _loadOutgoing()]);
-      
+
       if (_userId != null) {
         final savedSeen = await _storage.read(key: 'seen_friends_$_userId');
         if (savedSeen != null) {
           _seenCount = int.tryParse(savedSeen) ?? 0;
+        } else {
+          _seenCount = 0;
         }
       }
 
       if (_incoming.length < _seenCount) {
         _seenCount = _incoming.length;
         if (_userId != null) {
-          await _storage.write(key: 'seen_friends_$_userId', value: _seenCount.toString());
+          await _storage.write(
+              key: 'seen_friends_$_userId', value: _seenCount.toString());
         }
       }
     } catch (e) {
@@ -117,4 +122,3 @@ class FriendRequestsProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
-

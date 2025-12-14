@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/friend_requests_provider.dart';
 import '../widgets/styled_back_button.dart';
-import '../providers/friend_provider.dart';
-import 'chat_screen.dart';
 
 class FriendRequestsScreen extends StatefulWidget {
   const FriendRequestsScreen({super.key});
@@ -18,9 +16,6 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<FriendRequestsProvider>(context, listen: false).refresh();
-      final friendPrivider = Provider.of<FriendProvider>(context, listen: false);
-      friendPrivider.loadFriends();
-      friendPrivider.loadAllUsers();
     });
   }
 
@@ -55,7 +50,7 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
           ),
           SafeArea(
             child: DefaultTabController(
-              length: 3,
+              length: 2,
               child: Column(
                 children: [
                   Padding(
@@ -117,7 +112,6 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
                       labelStyle: const TextStyle(
                           fontWeight: FontWeight.w600, fontSize: 16),
                       tabs: const [
-                        Tab(text: 'My Friends'),
                         Tab(text: 'Incoming'),
                         Tab(text: 'Sent'),
                       ],

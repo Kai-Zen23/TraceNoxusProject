@@ -12,26 +12,28 @@ class MessageProvider extends ChangeNotifier {
   final MessageService _service = MessageService();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   AuthProvider? _authProvider;
-  
+
   List<MessageModel> _chatMessages = [];
   List<MessageModel> _allMessages = [];
   bool _isLoading = false;
   String? _error;
   int _seenCount = 0;
-  
+
   // WebSocket Support
   IOWebSocketChannel? _channel;
 
   List<MessageModel> get messages => _chatMessages;
   bool get isLoading => _isLoading;
   String? get error => _error;
-  
-  int get badgeCount => (_allMessages.length - _seenCount).clamp(0, _allMessages.length);
+
+  int get badgeCount =>
+      (_allMessages.length - _seenCount).clamp(0, _allMessages.length);
 
   Future<void> markAsSeen() async {
     _seenCount = _allMessages.length;
     if (_selfId != 0) {
-      await _storage.write(key: 'seen_messages_$_selfId', value: _seenCount.toString());
+      await _storage.write(
+          key: 'seen_messages_$_selfId', value: _seenCount.toString());
     }
     notifyListeners();
   }
@@ -51,18 +53,21 @@ class MessageProvider extends ChangeNotifier {
     notifyListeners();
     try {
       _allMessages = await _service.fetchMessages();
-      
+
       if (_selfId != 0) {
         final savedSeen = await _storage.read(key: 'seen_messages_$_selfId');
         if (savedSeen != null) {
           _seenCount = int.tryParse(savedSeen) ?? 0;
+        } else {
+          _seenCount = 0;
         }
       }
 
       if (_allMessages.length < _seenCount) {
         _seenCount = _allMessages.length;
         if (_selfId != 0) {
-          await _storage.write(key: 'seen_messages_$_selfId', value: _seenCount.toString());
+          await _storage.write(
+              key: 'seen_messages_$_selfId', value: _seenCount.toString());
         }
       }
       // print('DEBUG: Fetched ${_allMessages.length} total messages. SelfID: $_selfId');
@@ -93,7 +98,8 @@ class MessageProvider extends ChangeNotifier {
 
   Future<void> send({required int receiverId, required String content}) async {
     try {
-      final msg = await _service.sendMessage(receiverId: receiverId, content: content);
+      final msg =
+          await _service.sendMessage(receiverId: receiverId, content: content);
       // We rely on WebSocket to receive the message back, but for immediate UI update we can add it.
       // However, if we add it here AND receive it via WS, we need to handle duplicates.
       // The WS handler checks for duplicates, so it's safe to add here for responsiveness.
@@ -127,7 +133,8 @@ class MessageProvider extends ChangeNotifier {
         });
       }
     });
-    list.sort((a, b) => (b['timestamp'] as DateTime).compareTo(a['timestamp'] as DateTime));
+    list.sort((a, b) =>
+        (b['timestamp'] as DateTime).compareTo(a['timestamp'] as DateTime));
     return list;
   }
 
@@ -153,7 +160,9 @@ class MessageProvider extends ChangeNotifier {
     try {
       await _service.deleteConversation(otherUserId);
       _chatMessages.clear(); // Clear current chat if it's the one being deleted
-      _allMessages.removeWhere((msg) => _otherId(msg) == otherUserId); // Remove all messages related to this conversation
+      _allMessages.removeWhere((msg) =>
+          _otherId(msg) ==
+          otherUserId); // Remove all messages related to this conversation
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -163,7 +172,7 @@ class MessageProvider extends ChangeNotifier {
 
   Future<void> connect(int otherUserId) async {
     disconnect(); // Ensure no existing connection
-    
+
     final token = _authProvider?.accessToken;
     if (token == null) {
       print('MessageProvider: No token available for WebSocket');
@@ -172,7 +181,7 @@ class MessageProvider extends ChangeNotifier {
 
     final uri = Uri.parse(AppConstants.baseUrl);
     final wsScheme = uri.scheme == 'https' ? 'wss' : 'ws';
-    
+
     String hostPart = uri.host;
     if (uri.hasPort && uri.port > 0 && uri.port != 80 && uri.port != 443) {
       hostPart = '$hostPart:${uri.port}';
@@ -180,7 +189,7 @@ class MessageProvider extends ChangeNotifier {
 
     final urlString = '$wsScheme://$hostPart/ws/dm/$otherUserId/?token=$token';
     print('DEBUG: Connecting to DM WebSocket: $urlString');
-    
+
     final wsUrl = Uri.parse(urlString);
 
     try {
@@ -190,28 +199,29 @@ class MessageProvider extends ChangeNotifier {
           final data = jsonDecode(event);
           // print('WebSocket received: $data');
           final msg = MessageModel.fromJson(data);
-          
+
           // Update chat messages if relevant
           // Check if message belongs to current chat (either from other user or from self)
           // Since we are connected to a specific DM room (otherUserId), incoming messages should be relevant.
           // But we should verify sender/receiver just in case.
-          
-          bool isRelevant = (msg.sender == otherUserId || msg.receiver == otherUserId) &&
-                            (msg.sender == _selfId || msg.receiver == _selfId);
-                            
+
+          bool isRelevant =
+              (msg.sender == otherUserId || msg.receiver == otherUserId) &&
+                  (msg.sender == _selfId || msg.receiver == _selfId);
+
           if (isRelevant) {
-             if (!_chatMessages.any((m) => m.id == msg.id)) {
-               _chatMessages.add(msg);
-             }
+            if (!_chatMessages.any((m) => m.id == msg.id)) {
+              _chatMessages.add(msg);
+            }
           }
 
           // Update all messages list
           if (!_allMessages.any((m) => m.id == msg.id)) {
             _allMessages.add(msg);
           }
-          
+
           if (msg.sender != _selfId) {
-             SoundService().playNotificationSound();
+            SoundService().playNotificationSound();
           }
 
           notifyListeners();

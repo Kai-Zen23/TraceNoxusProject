@@ -8,6 +8,7 @@ import '../providers/friend_requests_provider.dart';
 import '../providers/message_provider.dart';
 import '../providers/event_provider.dart';
 import '../providers/notification_provider.dart';
+import '../providers/announcement_provider.dart';
 import '../widgets/highlights_section.dart';
 import 'profile_screen.dart';
 import '../providers/highlight_provider.dart';
@@ -41,6 +42,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
         final messageProvider =
             Provider.of<MessageProvider>(context, listen: false);
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        messageProvider.setSelf(authProvider);
         messageProvider.loadAllConversations();
 
         final eventProvider =
@@ -52,6 +55,11 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             Provider.of<NotificationProvider>(context, listen: false);
         notificationProvider.setUserId(userId);
         notificationProvider.fetchNotifications();
+
+        final announcementProvider =
+            Provider.of<AnnouncementProvider>(context, listen: false);
+        announcementProvider.setUserId(userId);
+        announcementProvider.fetchAnnouncements();
       }
     });
   }
@@ -277,7 +285,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
   void _openCalendar() => Navigator.pushNamed(context, '/calendar');
 
-  void _openNotifications() => Navigator.pushNamed(context, '/notifications');
+  void _openNotifications() => Navigator.pushNamed(context, '/announcement');
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -439,30 +447,33 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           ),
 
           // Bottom Navigation Bar
-          Positioned(
-            left: 24,
-            right: 24,
-            bottom: 24,
+          // Custom Bottom Navigation Bar
+          Align(
+            alignment: Alignment.bottomCenter,
             child: Container(
-              height: 70,
+              margin: EdgeInsets.zero,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                   colors: [
                     const Color(0xFF4A90E2).withOpacity(0.9),
                     const Color(0xFF002F6C).withOpacity(0.9),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(35),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.3),
-                    blurRadius: 15,
-                    offset: const Offset(0, 5),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
                   ),
                 ],
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   Consumer<FriendRequestsProvider>(
                     builder: (context, provider, child) {
@@ -503,14 +514,14 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                       );
                     },
                   ),
-                  Consumer<NotificationProvider>(
+                  Consumer<AnnouncementProvider>(
                     builder: (context, provider, child) {
                       return _buildNavItem(
                         Icons.announcement,
                         'Announcement',
                         () {
                           provider.markAsSeen();
-                          _openNotifications();
+                          _openNotifications(); // This opens AnnouncementScreen
                         },
                         badgeCount: provider.badgeCount,
                       );
@@ -529,19 +540,20 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       {int? badgeCount}) {
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Stack(
             clipBehavior: Clip.none,
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.pinkAccent.withOpacity(0.2), // Highlight color
-                  shape: BoxShape.circle,
+                child: Icon(
+                  icon,
+                  color: Colors.white70,
+                  size: 28,
                 ),
-                child: Icon(icon, color: Colors.white, size: 24),
               ),
               if (badgeCount != null && badgeCount > 0)
                 Positioned(
@@ -573,7 +585,11 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(color: Colors.white, fontSize: 10),
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+              fontWeight: FontWeight.normal,
+            ),
           ),
         ],
       ),

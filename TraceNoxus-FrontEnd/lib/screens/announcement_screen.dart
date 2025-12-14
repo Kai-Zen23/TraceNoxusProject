@@ -27,7 +27,8 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Announcement'),
-        content: const Text('Are you sure you want to delete this announcement?'),
+        content:
+            const Text('Are you sure you want to delete this announcement?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -45,17 +46,76 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
 
     try {
       if (!mounted) return;
-      await Provider.of<AnnouncementProvider>(context, listen: false).deleteAnnouncement(id);
-      
+      await Provider.of<AnnouncementProvider>(context, listen: false)
+          .deleteAnnouncement(id);
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Announcement deleted'), backgroundColor: Colors.green),
+          const SnackBar(
+              content: Text('Announcement deleted'),
+              backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _resetAnnouncements() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset Announcements'),
+        content: const Text(
+            'Are you sure you want to delete ALL announcements? This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Reset All', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final provider = Provider.of<AnnouncementProvider>(context, listen: false);
+    // Copy list to avoid concurrent modification issues if we delete one by one
+    final announcements = List.of(provider.announcements);
+
+    if (announcements.isEmpty) return;
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Resetting announcements...')),
+      );
+    }
+
+    try {
+      for (var a in announcements) {
+        await provider.deleteAnnouncement(a.id);
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('All announcements deleted'),
+              backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Error resetting: $e'),
+              backgroundColor: Colors.red),
         );
       }
     }
@@ -96,57 +156,84 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 48), // Balance the back button
+                      // Use Builder to safely access context if needed, or just standard check
+                      // We need to access AuthProvider here.
+                      // Note: We are inside a Column, build context is available.
+                      Consumer<AuthProvider>(builder: (context, auth, _) {
+                        final isAdmin = auth.isAdmin || auth.canSwitchRoles;
+                        if (isAdmin) {
+                          return IconButton(
+                            icon: const Icon(Icons.delete_sweep,
+                                color: Colors.redAccent),
+                            onPressed: _resetAnnouncements,
+                            tooltip: 'Reset All',
+                          );
+                        }
+                        return const SizedBox(
+                            width: 48); // Balance the back button
+                      }),
                     ],
                   ),
                 ),
                 Expanded(
-                  child: Consumer<AnnouncementProvider>(
-                    builder: (context, provider, child) {
-                      if (provider.isLoading) {
-                        return const Center(
-                            child: CircularProgressIndicator(
-                                color: Colors.blueAccent));
-                      }
-
-                      if (provider.error != null) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Error: ${provider.error}',
-                                style: const TextStyle(color: Colors.redAccent),
-                              ),
-                              const SizedBox(height: 10),
-                              ElevatedButton(
-                                onPressed: () => provider.fetchAnnouncements(),
-                                child: const Text('Retry'),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-
-                      if (provider.announcements.isEmpty) {
-                        return const Center(
-                          child: Text(
-                            'No announcements yet.',
-                            style:
-                                TextStyle(color: Colors.white70, fontSize: 16),
-                          ),
-                        );
-                      }
-
-                      return ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: provider.announcements.length,
-                        itemBuilder: (context, index) {
-                          final announcement = provider.announcements[index];
-                          return _buildAnnouncementCard(context, announcement);
-                        },
-                      );
+                  child: RefreshIndicator(
+                    onRefresh: () async {
+                      await Provider.of<AnnouncementProvider>(context,
+                              listen: false)
+                          .fetchAnnouncements();
                     },
+                    child: Consumer<AnnouncementProvider>(
+                      builder: (context, provider, child) {
+                        if (provider.isLoading) {
+                          return const Center(
+                              child: CircularProgressIndicator(
+                                  color: Colors.blueAccent));
+                        }
+
+                        if (provider.error != null) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Error: ${provider.error}',
+                                  style:
+                                      const TextStyle(color: Colors.redAccent),
+                                ),
+                                const SizedBox(height: 10),
+                                ElevatedButton(
+                                  onPressed: () =>
+                                      provider.fetchAnnouncements(),
+                                  child: const Text('Retry'),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        if (provider.announcements.isEmpty) {
+                          return const Center(
+                            child: Text(
+                              'No announcements yet.',
+                              style: TextStyle(
+                                  color: Colors.white70, fontSize: 16),
+                            ),
+                          );
+                        }
+
+                        return ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          physics:
+                              const AlwaysScrollableScrollPhysics(), // Ensure scrollable for RefreshIndicator
+                          itemCount: provider.announcements.length,
+                          itemBuilder: (context, index) {
+                            final announcement = provider.announcements[index];
+                            return _buildAnnouncementCard(
+                                context, announcement);
+                          },
+                        );
+                      },
+                    ),
                   ),
                 ),
               ],
@@ -157,14 +244,15 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
     );
   }
 
-  Widget _buildAnnouncementCard(BuildContext context, Announcement announcement) {
+  Widget _buildAnnouncementCard(
+      BuildContext context, Announcement announcement) {
     // Format date
     final date = DateTime.parse(announcement.createdAt);
     final formattedDate = DateFormat('MMM d, yyyy • h:mm a').format(date);
-    
-    // Check if user is admin
+
+    // Check if user is admin (works even in user mode if original role was admin)
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final bool isAdmin = authProvider.currentUser?.isAdmin ?? false;
+    final bool isAdmin = authProvider.isAdmin || authProvider.canSwitchRoles;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -217,13 +305,13 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
                       ),
                     ),
                   ),
-                  
                 if (isAdmin)
-                   IconButton(
-                     icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                     onPressed: () => _deleteAnnouncement(announcement.id),
-                     tooltip: 'Delete Announcement',
-                   ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline,
+                        color: Colors.redAccent),
+                    onPressed: () => _deleteAnnouncement(announcement.id),
+                    tooltip: 'Delete Announcement',
+                  ),
               ],
             ),
             const SizedBox(height: 8),
