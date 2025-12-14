@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart'; 
+import 'package:intl/intl.dart';
 import '../core/utils/message_date_utils.dart';
+import '../widgets/styled_back_button.dart';
 import 'package:TraceNoxus/providers/room_chat_provider.dart';
 import 'package:TraceNoxus/providers/friend_provider.dart';
 import 'package:TraceNoxus/providers/auth_provider.dart';
@@ -62,16 +63,34 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          Positioned.fill(child: Image.asset('assets/image/background_user.png', fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: const Color(0xFF1A1A1A)))),
+          Positioned.fill(
+              child: Image.asset('assets/image/background_user.png',
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) =>
+                      Container(color: const Color(0xFF1A1A1A)))),
           SafeArea(
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
-                    children: const [
-                      Expanded(child: Text('General Chat', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700))),
-                      Icon(Icons.public, color: Colors.white),
+                    children: [
+                      const StyledBackButton(),
+                      Expanded(
+                        child: Center(
+                          child: const Text(
+                            'General Chat',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const Icon(Icons.public, color: Colors.white),
                     ],
                   ),
                 ),
@@ -80,103 +99,117 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
                   child: provider.isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : ListView.builder(
-                    controller: _scroll,
-                    padding: const EdgeInsets.all(16),
-                    itemCount: provider.messages.length,
-                    itemBuilder: (context, index) {
-                      final m = provider.messages[index];
-                      final isMe = auth.currentUser?.id != null && m.sender == auth.currentUser!.id;
-                      final user = friends.allUsers.firstWhere(
-                        (u) => u['id'] == m.sender,
-                        orElse: () => {'username': 'User ${m.sender}', 'id': m.sender}
-                      );
-                      final displayName = (m.senderName ?? user['username'] ?? user['email'] ?? 'User ${m.sender}').toString();
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-                          children: [
-                            if (!isMe)
-                              GestureDetector(
-                                onTap: () => _showProfile(context, user),
-                                child: _buildAvatar(m, user, displayName),
-                              ),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Column(
-                                crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          controller: _scroll,
+                          padding: const EdgeInsets.all(16),
+                          itemCount: provider.messages.length,
+                          itemBuilder: (context, index) {
+                            final m = provider.messages[index];
+                            final isMe = auth.currentUser?.id != null &&
+                                m.sender == auth.currentUser!.id;
+                            final user = friends.allUsers.firstWhere(
+                                (u) => u['id'] == m.sender,
+                                orElse: () => {
+                                      'username': 'User ${m.sender}',
+                                      'id': m.sender
+                                    });
+                            final displayName = (m.senderName ??
+                                    user['username'] ??
+                                    user['email'] ??
+                                    'User ${m.sender}')
+                                .toString();
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 6),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: isMe
+                                    ? MainAxisAlignment.end
+                                    : MainAxisAlignment.start,
                                 children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                       if (!isMe) _showProfile(context, user);
-                                    },
-                                    child: Text(displayName,
-                                        style: const TextStyle(color: Colors.white70, fontSize: 10)),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  GestureDetector(
-                                    onLongPress: isMe ? () {
-                                      showDialog(
-                                        context: context,
-                                        builder: (ctx) => AlertDialog(
-                                          title: const Text('Delete Message'),
-                                          content: const Text('Are you sure you want to delete this message?'),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () => Navigator.pop(ctx),
-                                              child: const Text('Cancel'),
-                                            ),
-                                            TextButton(
-                                              onPressed: () {
-                                                context.read<RoomChatProvider>().deleteMessage(m.id);
-                                                Navigator.pop(ctx);
-                                              },
-                                              child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    } : null,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                      decoration: BoxDecoration(
-                                        color: isMe ? const Color(0xFF3A8FB7) : const Color(0xFF2E5E88),
-                                        borderRadius: BorderRadius.circular(16),
+                                  if (!isMe)
+                                    GestureDetector(
+                                      onTap: () => _showProfile(context, user),
+                                      child: CircleAvatar(
+                                        radius: 16,
+                                        backgroundColor:
+                                            const Color(0xFF2E5E88),
+                                        backgroundImage:
+                                            m.senderProfileImage != null
+                                                ? NetworkImage(
+                                                    m.senderProfileImage!)
+                                                : null,
+                                        child: m.senderProfileImage == null
+                                            ? Text(
+                                                displayName.isNotEmpty
+                                                    ? displayName[0]
+                                                        .toUpperCase()
+                                                    : '?',
+                                                style: const TextStyle(
+                                                    color: Colors.white))
+                                            : null,
                                       ),
-                                      child: Text(m.content, style: const TextStyle(color: Colors.white)),
+                                    ),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Column(
+                                      crossAxisAlignment: isMe
+                                          ? CrossAxisAlignment.end
+                                          : CrossAxisAlignment.start,
+                                      children: [
+                                        GestureDetector(
+                                          onTap: () {
+                                            if (!isMe)
+                                              _showProfile(context, user);
+                                          },
+                                          child: Text(displayName,
+                                              style: const TextStyle(
+                                                  color: Colors.white70,
+                                                  fontSize: 10)),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 10),
+                                          decoration: BoxDecoration(
+                                            color: isMe
+                                                ? const Color(0xFF3A8FB7)
+                                                : const Color(0xFF2E5E88),
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                          ),
+                                          child: Text(m.content,
+                                              style: const TextStyle(
+                                                  color: Colors.white)),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                              top: 2, left: 4, right: 4),
+                                          child: Text(
+                                            formatMessageTimestamp(m.timestamp),
+                                            style: const TextStyle(
+                                                color: Colors.white54,
+                                                fontSize: 10),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 2, left: 4, right: 4),
-                                    child: Text(
-                                      formatMessageTimestamp(m.timestamp),
-                                      style: const TextStyle(color: Colors.white54, fontSize: 10),
+                                  const SizedBox(width: 8),
+                                  if (isMe)
+                                    CircleAvatar(
+                                      radius: 16,
+                                      backgroundColor: const Color(0xFF3A8FB7),
+                                      child: Text(
+                                        (auth.currentUser?.username ?? 'Me')[0]
+                                            .toUpperCase(),
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
                                     ),
-                                  ),
                                 ],
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            if (isMe)
-                              CircleAvatar(
-                                radius: 16,
-                                backgroundColor: const Color(0xFF3A8FB7),
-                                backgroundImage: auth.currentUser?.profileImageUrl != null
-                                    ? NetworkImage(auth.currentUser!.profileImageUrl!)
-                                    : null,
-                                child: auth.currentUser?.profileImageUrl == null
-                                    ? Text(
-                                        (auth.currentUser?.username ?? 'Me')[0].toUpperCase(),
-                                        style: const TextStyle(color: Colors.white),
-                                      )
-                                    : null,
-                              ),
-                          ],
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -184,7 +217,9 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
                     children: [
                       Expanded(
                         child: Container(
-                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(24)),
+                          decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(24)),
                           child: TextField(
                             controller: _controller,
                             style: const TextStyle(color: Colors.white),
@@ -192,7 +227,8 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
                               hintText: 'Type a message',
                               hintStyle: TextStyle(color: Colors.white70),
                               border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 12),
                             ),
                           ),
                         ),
@@ -205,8 +241,10 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
                           if (text.isEmpty) return;
                           await provider.send(text, room: 'general');
                           _controller.clear();
-                          await Future.delayed(const Duration(milliseconds: 100));
-                          if (_scroll.hasClients) _scroll.jumpTo(_scroll.position.maxScrollExtent);
+                          await Future.delayed(
+                              const Duration(milliseconds: 100));
+                          if (_scroll.hasClients)
+                            _scroll.jumpTo(_scroll.position.maxScrollExtent);
                         },
                       ),
                     ],
@@ -217,22 +255,6 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
           ),
         ],
       ),
-    );
-  }
-  Widget _buildAvatar(dynamic m, Map<String, dynamic> user, String displayName) {
-    String? img = m.senderProfileImage ?? user['profile_image'];
-    if (img != null) {
-      if (img.startsWith('file://')) img = img.replaceAll('file://', '');
-      if (!img.startsWith('http')) img = '${AppConstants.baseUrl}$img';
-    }
-    return CircleAvatar(
-      radius: 16,
-      backgroundColor: const Color(0xFF2E5E88),
-      backgroundImage: img != null ? NetworkImage(img) : null,
-      child: img == null
-          ? Text(displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
-              style: const TextStyle(color: Colors.white))
-          : null,
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../providers/event_provider.dart';
+import '../widgets/styled_back_button.dart';
 import '../providers/auth_provider.dart';
 import '../providers/notification_provider.dart';
 import '../models/event_model.dart';
@@ -28,7 +29,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   void _swapMonth(int offset) {
     setState(() {
-      _visibleMonth = DateTime(_visibleMonth.year, _visibleMonth.month + offset);
+      _visibleMonth =
+          DateTime(_visibleMonth.year, _visibleMonth.month + offset);
       _selectedDay = null;
     });
   }
@@ -49,15 +51,19 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   void _showSendNotificationDialog(BuildContext context, EventModel event) {
-    final titleController = TextEditingController(text: 'Reminder: ${event.title}');
-    final messageController = TextEditingController(text: 'Don\'t forget about ${event.title} on ${event.date} at ${event.time}!');
+    final titleController =
+        TextEditingController(text: 'Reminder: ${event.title}');
+    final messageController = TextEditingController(
+        text:
+            'Don\'t forget about ${event.title} on ${event.date} at ${event.time}!');
     final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF0F3156),
-        title: const Text('Send Notification', style: TextStyle(color: Colors.white)),
+        title: const Text('Send Notification',
+            style: TextStyle(color: Colors.white)),
         content: Form(
           key: formKey,
           child: Column(
@@ -69,9 +75,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Title',
                   labelStyle: TextStyle(color: Colors.white70),
-                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                  enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white24)),
                 ),
-                validator: (value) => value == null || value.isEmpty ? 'Please enter a title' : null,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Please enter a title'
+                    : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -81,9 +90,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Message',
                   labelStyle: TextStyle(color: Colors.white70),
-                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                  enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white24)),
                 ),
-                validator: (value) => value == null || value.isEmpty ? 'Please enter a message' : null,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Please enter a message'
+                    : null,
               ),
             ],
           ),
@@ -91,18 +103,22 @@ class _CalendarScreenState extends State<CalendarScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+            child:
+                const Text('Cancel', style: TextStyle(color: Colors.white70)),
           ),
           ElevatedButton(
             onPressed: () async {
               if (formKey.currentState!.validate()) {
                 try {
-                  await Provider.of<NotificationProvider>(context, listen: false)
-                      .sendNotification(titleController.text, messageController.text);
+                  await Provider.of<NotificationProvider>(context,
+                          listen: false)
+                      .sendNotification(
+                          titleController.text, messageController.text);
                   if (context.mounted) {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Notification sent successfully')),
+                      const SnackBar(
+                          content: Text('Notification sent successfully')),
                     );
                   }
                 } catch (e) {
@@ -135,7 +151,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const CreateEventScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const CreateEventScreen()),
                 );
               },
               backgroundColor: const Color(0xFF0F3156),
@@ -163,23 +180,21 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 children: [
                   Row(
                     children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.chevron_left,
-                          color: Color(0xFF88AEC9),
-                          size: 32,
-                        ),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Events',
-                        style: TextStyle(
-                          color: Color(0xFF88AEC9),
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
+                      const StyledBackButton(),
+                      Expanded(
+                        child: Center(
+                          child: const Text(
+                            'Events',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
                         ),
                       ),
+                      const SizedBox(width: 48), // Balance the back button
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -245,9 +260,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             if (day == null) {
                               return const SizedBox.shrink();
                             }
-                            
-                            final currentDayDate = DateTime(_visibleMonth.year, _visibleMonth.month, day);
-                            final hasEvent = eventProvider.getEventsForDate(currentDayDate).isNotEmpty;
+
+                            final currentDayDate = DateTime(
+                                _visibleMonth.year, _visibleMonth.month, day);
+                            final hasEvent = eventProvider
+                                .getEventsForDate(currentDayDate)
+                                .isNotEmpty;
                             final isSelected = day == _selectedDay;
 
                             return GestureDetector(
@@ -283,7 +301,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                         width: 6,
                                         height: 6,
                                         decoration: BoxDecoration(
-                                          color: isSelected ? Colors.white : Colors.red,
+                                          color: isSelected
+                                              ? Colors.white
+                                              : Colors.red,
                                           shape: BoxShape.circle,
                                         ),
                                       ),
@@ -301,7 +321,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     child: Consumer<EventProvider>(
                       builder: (context, eventProvider, child) {
                         if (eventProvider.isLoading) {
-                          return const Center(child: CircularProgressIndicator());
+                          return const Center(
+                              child: CircularProgressIndicator());
                         }
 
                         if (eventProvider.error != null) {
@@ -314,16 +335,18 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         }
 
                         final events = eventProvider.events;
-                        
+
                         // Filter by selected day if needed, or show all for month
                         List<EventModel> displayEvents = events;
                         if (_selectedDay != null) {
-                          final selectedDate = DateTime(_visibleMonth.year, _visibleMonth.month, _selectedDay!);
-                          displayEvents = eventProvider.getEventsForDate(selectedDate);
+                          final selectedDate = DateTime(_visibleMonth.year,
+                              _visibleMonth.month, _selectedDay!);
+                          displayEvents =
+                              eventProvider.getEventsForDate(selectedDate);
                         }
 
                         if (displayEvents.isEmpty) {
-                           return const Center(
+                          return const Center(
                             child: Text(
                               'No events found',
                               style: TextStyle(color: Colors.white70),
@@ -361,21 +384,36 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                     context: context,
                                     builder: (context) => AlertDialog(
                                       backgroundColor: const Color(0xFF0F3156),
-                                      title: Text(event.title, style: const TextStyle(color: Colors.white)),
+                                      title: Text(event.title,
+                                          style: const TextStyle(
+                                              color: Colors.white)),
                                       content: SingleChildScrollView(
                                         child: Column(
                                           mainAxisSize: MainAxisSize.min,
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            Text('Date: ${event.date}', style: const TextStyle(color: Colors.white70)),
+                                            Text('Date: ${event.date}',
+                                                style: const TextStyle(
+                                                    color: Colors.white70)),
                                             const SizedBox(height: 4),
-                                            Text('Time: ${event.time}', style: const TextStyle(color: Colors.white70)),
+                                            Text('Time: ${event.time}',
+                                                style: const TextStyle(
+                                                    color: Colors.white70)),
                                             const SizedBox(height: 8),
-                                            Text('Location: ${event.location}', style: const TextStyle(color: Colors.white70)),
+                                            Text('Location: ${event.location}',
+                                                style: const TextStyle(
+                                                    color: Colors.white70)),
                                             const SizedBox(height: 16),
-                                            const Text('Description:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                            const Text('Description:',
+                                                style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight:
+                                                        FontWeight.bold)),
                                             const SizedBox(height: 4),
-                                            Text(event.description, style: const TextStyle(color: Colors.white)),
+                                            Text(event.description,
+                                                style: const TextStyle(
+                                                    color: Colors.white)),
                                           ],
                                         ),
                                       ),
@@ -387,23 +425,33 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                               Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
-                                                  builder: (context) => CreateEventScreen(event: event),
+                                                  builder: (context) =>
+                                                      CreateEventScreen(
+                                                          event: event),
                                                 ),
                                               );
                                             },
-                                            child: const Text('Edit', style: TextStyle(color: Colors.orange)),
+                                            child: const Text('Edit',
+                                                style: TextStyle(
+                                                    color: Colors.orange)),
                                           ),
                                         if (isAdmin)
                                           TextButton(
                                             onPressed: () {
                                               Navigator.pop(context);
-                                              _showSendNotificationDialog(context, event);
+                                              _showSendNotificationDialog(
+                                                  context, event);
                                             },
-                                            child: const Text('Notify', style: TextStyle(color: Colors.green)),
+                                            child: const Text('Notify',
+                                                style: TextStyle(
+                                                    color: Colors.green)),
                                           ),
                                         TextButton(
-                                          onPressed: () => Navigator.pop(context),
-                                          child: const Text('Close', style: TextStyle(color: Colors.blue)),
+                                          onPressed: () =>
+                                              Navigator.pop(context),
+                                          child: const Text('Close',
+                                              style: TextStyle(
+                                                  color: Colors.blue)),
                                         ),
                                       ],
                                     ),
@@ -413,7 +461,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
                                           event.time,

@@ -4,6 +4,7 @@ import '../providers/user_provider.dart';
 import '../models/user_model.dart';
 import 'edit_profile_screen.dart';
 import 'settings_screen.dart';
+import '../widgets/styled_back_button.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -33,7 +34,8 @@ class ProfileScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Error: ${userProvider.error}', style: const TextStyle(color: Colors.red)),
+              Text('Error: ${userProvider.error}',
+                  style: const TextStyle(color: Colors.red)),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => userProvider.loadUserData(),
@@ -79,7 +81,8 @@ class ProfileScreen extends StatelessWidget {
             child: Image.asset(
               'assets/image/background_user.png', // Reusing the background
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(color: const Color(0xFF0F172A)),
+              errorBuilder: (_, __, ___) =>
+                  Container(color: const Color(0xFF0F172A)),
             ),
           ),
           SafeArea(
@@ -87,30 +90,33 @@ class ProfileScreen extends StatelessWidget {
               children: [
                 // Header
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      CircleAvatar(
-                        backgroundColor: Colors.blue.withOpacity(0.2),
-                        child: IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.blue),
-                          onPressed: () => Navigator.pop(context),
+                      const StyledBackButton(),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          shape: BoxShape.circle,
                         ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.settings, color: Colors.blue),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const SettingsScreen()),
-                          );
-                        },
+                        child: IconButton(
+                          icon: const Icon(Icons.settings,
+                              color: Colors.white, size: 20),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const SettingsScreen()),
+                            );
+                          },
+                        ),
                       ),
                     ],
                   ),
                 ),
-                
+
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -131,12 +137,13 @@ class ProfileScreen extends StatelessWidget {
                                 ? NetworkImage(user.profileImageUrl!)
                                 : null,
                             child: user.profileImageUrl == null
-                                ? const Icon(Icons.person, size: 60, color: Colors.white)
+                                ? const Icon(Icons.person,
+                                    size: 60, color: Colors.white)
                                 : null,
                           ),
                         ),
                         const SizedBox(height: 16),
-                        
+
                         // Name and Username
                         Text(
                           user.name ?? user.username,
@@ -154,13 +161,15 @@ class ProfileScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        
+
                         // Edit Profile Button
                         ElevatedButton.icon(
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const EditProfileScreen()),
                             );
                           },
                           icon: const Icon(Icons.edit, size: 16),
@@ -174,7 +183,7 @@ class ProfileScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 32),
-                        
+
                         // Games Played
                         _buildSectionTitle('Games Played:'),
                         const SizedBox(height: 8),
@@ -182,7 +191,11 @@ class ProfileScreen extends StatelessWidget {
                           children: [
                             Expanded(
                               child: _buildInfoCard(
-                                user.gamesPlayed?.split(',').firstOrNull?.trim() ?? 'Valorant, Tekken',
+                                user.gamesPlayed
+                                        ?.split(',')
+                                        .firstOrNull
+                                        ?.trim() ??
+                                    'Valorant, Tekken',
                                 icon: Icons.sports_esports,
                               ),
                             ),
@@ -190,7 +203,7 @@ class ProfileScreen extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        
+
                         // Competitive Level and Preferred Roles
                         Row(
                           children: [

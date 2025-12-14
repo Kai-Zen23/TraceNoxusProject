@@ -12,7 +12,6 @@ import '../widgets/highlights_section.dart';
 import 'profile_screen.dart';
 import '../providers/highlight_provider.dart';
 
-
 class UserHomeScreen extends StatefulWidget {
   const UserHomeScreen({super.key});
 
@@ -32,21 +31,25 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       final context = this.context;
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       await userProvider.loadUserData();
-      
+
       final userId = userProvider.user?.id;
       if (userId != null) {
-        final friendRequestsProvider = Provider.of<FriendRequestsProvider>(context, listen: false);
+        final friendRequestsProvider =
+            Provider.of<FriendRequestsProvider>(context, listen: false);
         friendRequestsProvider.setUserId(userId);
         friendRequestsProvider.refresh();
 
-        final messageProvider = Provider.of<MessageProvider>(context, listen: false);
+        final messageProvider =
+            Provider.of<MessageProvider>(context, listen: false);
         messageProvider.loadAllConversations();
 
-        final eventProvider = Provider.of<EventProvider>(context, listen: false);
+        final eventProvider =
+            Provider.of<EventProvider>(context, listen: false);
         eventProvider.setUserId(userId);
         eventProvider.fetchEvents();
 
-        final notificationProvider = Provider.of<NotificationProvider>(context, listen: false);
+        final notificationProvider =
+            Provider.of<NotificationProvider>(context, listen: false);
         notificationProvider.setUserId(userId);
         notificationProvider.fetchNotifications();
       }
@@ -56,35 +59,37 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   bool _isPickingVideo = false;
 
   void _showUploadOptions() {
-     showModalBottomSheet(
-       context: context,
-       backgroundColor: const Color(0xFF1E293B),
-       shape: const RoundedRectangleBorder(
-         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-       ),
-       builder: (context) => Column(
-         mainAxisSize: MainAxisSize.min,
-         children: [
-           ListTile(
-             leading: const Icon(Icons.video_library, color: Colors.blue),
-             title: const Text('Upload from Gallery', style: TextStyle(color: Colors.white)),
-             onTap: () {
-               Navigator.pop(context);
-               _pickVideoFromGallery();
-             },
-           ),
-           ListTile(
-             leading: const Icon(Icons.link, color: Colors.green),
-             title: const Text('Add via URL', style: TextStyle(color: Colors.white)),
-             onTap: () {
-               Navigator.pop(context);
-               _showUrlUploadDialog();
-             },
-           ),
-           const SizedBox(height: 16),
-         ],
-       ),
-     );
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E293B),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.video_library, color: Colors.blue),
+            title: const Text('Upload from Gallery',
+                style: TextStyle(color: Colors.white)),
+            onTap: () {
+              Navigator.pop(context);
+              _pickVideoFromGallery();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.link, color: Colors.green),
+            title: const Text('Add via URL',
+                style: TextStyle(color: Colors.white)),
+            onTap: () {
+              Navigator.pop(context);
+              _showUrlUploadDialog();
+            },
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
   }
 
   Future<void> _pickVideoFromGallery() async {
@@ -97,11 +102,11 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     try {
       final picker = ImagePicker();
       final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
-      
+
       if (video != null && mounted) {
         final TextEditingController titleController = TextEditingController();
         String selectedCategory = 'Game Highlights';
-        
+
         await showDialog(
           context: context,
           builder: (dialogContext) => AlertDialog(
@@ -116,7 +121,11 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   value: selectedCategory,
-                  items: ['Game Highlights', 'Tournament Videos', 'Interview Videos']
+                  items: [
+                    'Game Highlights',
+                    'Tournament Videos',
+                    'Interview Videos'
+                  ]
                       .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                       .toList(),
                   onChanged: (val) => selectedCategory = val!,
@@ -132,24 +141,28 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               ElevatedButton(
                 onPressed: () async {
                   if (titleController.text.isNotEmpty) {
-                    Navigator.pop(dialogContext); // Close dialog using dialogContext
-                    
+                    Navigator.pop(
+                        dialogContext); // Close dialog using dialogContext
+
                     // Show loading using outer context
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Uploading video...')),
                     );
-                    
+
                     // Use outer context for Provider as well
-                    final error = await Provider.of<HighlightProvider>(context, listen: false)
+                    final error = await Provider.of<HighlightProvider>(context,
+                            listen: false)
                         .uploadHighlight(
-                          videoFile: File(video.path),
-                          title: titleController.text,
-                          category: selectedCategory,
-                        );
-                        
+                      videoFile: File(video.path),
+                      title: titleController.text,
+                      category: selectedCategory,
+                    );
+
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(error == null ? 'Upload proper!' : error)),
+                        SnackBar(
+                            content:
+                                Text(error == null ? 'Upload proper!' : error)),
                       );
                     }
                   }
@@ -163,9 +176,10 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     } catch (e) {
       debugPrint('Error picking video: $e');
       if (mounted) {
-         ScaffoldMessenger.of(context).showSnackBar(
-           const SnackBar(content: Text('Error picking video. Please try again.')),
-         );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Error picking video. Please try again.')),
+        );
       }
     } finally {
       if (mounted) {
@@ -177,70 +191,76 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   }
 
   Future<void> _showUrlUploadDialog() async {
-      final TextEditingController titleController = TextEditingController();
-      final TextEditingController urlController = TextEditingController();
-      String selectedCategory = 'Game Highlights';
+    final TextEditingController titleController = TextEditingController();
+    final TextEditingController urlController = TextEditingController();
+    String selectedCategory = 'Game Highlights';
 
-      await showDialog(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: const Text('Add Highlight Link'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(labelText: 'Video Title'),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: urlController,
-                  decoration: const InputDecoration(labelText: 'Video URL (e.g. Cloudinary)'),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: selectedCategory,
-                  items: ['Game Highlights', 'Tournament Videos', 'Interview Videos']
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                      .toList(),
-                  onChanged: (val) => selectedCategory = val!,
-                  decoration: const InputDecoration(labelText: 'Category'),
-                ),
-              ],
+    await showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Add Highlight Link'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(labelText: 'Video Title'),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  if (titleController.text.isNotEmpty && urlController.text.isNotEmpty) {
-                    Navigator.pop(dialogContext); // Close dialog
-                    
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Adding video link...')),
-                    );
-                    
-                    final error = await Provider.of<HighlightProvider>(context, listen: false)
-                        .uploadHighlight(
-                          videoUrl: urlController.text.trim(),
-                          title: titleController.text,
-                          category: selectedCategory,
-                        );
-                        
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(error == null ? 'Link added!' : error)),
-                      );
-                    }
-                  }
-                },
-                child: const Text('Add'),
-              ),
-            ],
+            const SizedBox(height: 8),
+            TextField(
+              controller: urlController,
+              decoration: const InputDecoration(
+                  labelText: 'Video URL (e.g. Cloudinary)'),
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: selectedCategory,
+              items: [
+                'Game Highlights',
+                'Tournament Videos',
+                'Interview Videos'
+              ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+              onChanged: (val) => selectedCategory = val!,
+              decoration: const InputDecoration(labelText: 'Category'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
           ),
-        );
+          ElevatedButton(
+            onPressed: () async {
+              if (titleController.text.isNotEmpty &&
+                  urlController.text.isNotEmpty) {
+                Navigator.pop(dialogContext); // Close dialog
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Adding video link...')),
+                );
+
+                final error =
+                    await Provider.of<HighlightProvider>(context, listen: false)
+                        .uploadHighlight(
+                  videoUrl: urlController.text.trim(),
+                  title: titleController.text,
+                  category: selectedCategory,
+                );
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(error == null ? 'Link added!' : error)),
+                  );
+                }
+              }
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -259,11 +279,10 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
   void _openNotifications() => Navigator.pushNamed(context, '/notifications');
 
-
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final image = await picker.pickImage(
-        source: ImageSource.gallery, maxWidth: 800);
+    final image =
+        await picker.pickImage(source: ImageSource.gallery, maxWidth: 800);
     if (image != null) {
       setState(() => _pickedImage = image);
     }
@@ -273,15 +292,16 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final name = _nameController.text.trim();
     await userProvider.updateUserProfile(
-      name: name.isEmpty ? (userProvider.user?.name ??
-          userProvider.user?.username ?? '') : name,
+      name: name.isEmpty
+          ? (userProvider.user?.name ?? userProvider.user?.username ?? '')
+          : name,
       profileImageFile: _pickedImage,
     );
     await userProvider.loadUserData();
     if (mounted) {
       setState(() => _pickedImage = null);
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Profile updated')));
     }
   }
 
@@ -292,8 +312,9 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
     }
   }
-  
-  Future<void> _switchToAdminMode(BuildContext context, AuthProvider authProvider) async {
+
+  Future<void> _switchToAdminMode(
+      BuildContext context, AuthProvider authProvider) async {
     await authProvider.switchToAdminMode();
     if (!mounted) return;
     Navigator.pushNamedAndRemoveUntil(context, '/admin', (route) => false);
@@ -322,7 +343,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               children: [
                 // Header
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                   child: Row(
                     children: [
                       const Text(
@@ -339,15 +361,19 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                       // Role mode toggle for admins in user mode
                       Consumer<AuthProvider>(
                         builder: (context, authProvider, child) {
-                          if (authProvider.canSwitchRoles && authProvider.isInUserMode) {
+                          if (authProvider.canSwitchRoles &&
+                              authProvider.isInUserMode) {
                             return Row(
                               children: [
-                                const Text('', style: TextStyle(color: Colors.white70, fontSize: 5)),
+                                const Text('',
+                                    style: TextStyle(
+                                        color: Colors.white70, fontSize: 5)),
                                 const SizedBox(width: 4),
                                 Switch(
                                   value: false,
                                   onChanged: (value) {
-                                    if (value) _switchToAdminMode(context, authProvider);
+                                    if (value)
+                                      _switchToAdminMode(context, authProvider);
                                   },
                                   activeColor: Colors.green,
                                   inactiveThumbColor: Colors.blue,
@@ -360,16 +386,12 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                       ),
                       // Friend Requests Button moved to bottom nav
                       const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.search, color: Colors.white, size: 28),
-                        onPressed: () {},
-                      ),
-                      const SizedBox(width: 8),
                       GestureDetector(
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                            MaterialPageRoute(
+                                builder: (context) => const ProfileScreen()),
                           );
                         },
                         child: CircleAvatar(
@@ -379,7 +401,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                               ? NetworkImage(user!.profileImageUrl!)
                               : null,
                           child: user?.profileImageUrl == null
-                              ? const Icon(Icons.person_3_outlined, size: 20, color: Colors.white)
+                              ? const Icon(Icons.person_3_outlined,
+                                  size: 20, color: Colors.white)
                               : null,
                         ),
                       ),
@@ -393,18 +416,19 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                     child: Column(
                       children: [
                         const SizedBox(height: 20),
-                        
+
                         // New Highlights Section
                         Consumer<AuthProvider>(
                           builder: (context, auth, _) {
-                            final isAdmin = auth.user?.role == 'admin' || auth.user?.isStaff == true;
+                            final isAdmin = auth.user?.role == 'admin' ||
+                                auth.user?.isStaff == true;
                             return HighlightsSection(
                               isAdmin: isAdmin,
                               onUpload: _showUploadOptions, // Updated callback
                             );
                           },
                         ),
-                        
+
                         const SizedBox(height: 100), // Space for bottom nav
                       ],
                     ),

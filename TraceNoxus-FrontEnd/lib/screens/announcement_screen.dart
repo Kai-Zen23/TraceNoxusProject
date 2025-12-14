@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/announcement_provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/announcement_model.dart';
+import '../widgets/styled_back_button.dart';
 import 'package:intl/intl.dart';
 
 class AnnouncementScreen extends StatefulWidget {
@@ -17,7 +18,8 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
   void initState() {
     super.initState();
     Future.microtask(() =>
-        Provider.of<AnnouncementProvider>(context, listen: false).fetchAnnouncements());
+        Provider.of<AnnouncementProvider>(context, listen: false)
+            .fetchAnnouncements());
   }
 
   Future<void> _deleteAnnouncement(int id) async {
@@ -62,63 +64,95 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A2E), // Dark background
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF1A1A2E),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Announcements',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-      body: Consumer<AnnouncementProvider>(
-        builder: (context, provider, child) {
-          if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator(color: Colors.blueAccent));
-          }
-
-          if (provider.error != null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Error: ${provider.error}',
-                    style: const TextStyle(color: Colors.redAccent),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/image/background_user.png',
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  Container(color: const Color(0xFF1A1A2E)),
+            ),
+          ),
+          SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      const StyledBackButton(),
+                      Expanded(
+                        child: Center(
+                          child: const Text(
+                            'Announcements',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 48), // Balance the back button
+                    ],
                   ),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () => provider.fetchAnnouncements(),
-                    child: const Text('Retry'),
+                ),
+                Expanded(
+                  child: Consumer<AnnouncementProvider>(
+                    builder: (context, provider, child) {
+                      if (provider.isLoading) {
+                        return const Center(
+                            child: CircularProgressIndicator(
+                                color: Colors.blueAccent));
+                      }
+
+                      if (provider.error != null) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Error: ${provider.error}',
+                                style: const TextStyle(color: Colors.redAccent),
+                              ),
+                              const SizedBox(height: 10),
+                              ElevatedButton(
+                                onPressed: () => provider.fetchAnnouncements(),
+                                child: const Text('Retry'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      if (provider.announcements.isEmpty) {
+                        return const Center(
+                          child: Text(
+                            'No announcements yet.',
+                            style:
+                                TextStyle(color: Colors.white70, fontSize: 16),
+                          ),
+                        );
+                      }
+
+                      return ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: provider.announcements.length,
+                        itemBuilder: (context, index) {
+                          final announcement = provider.announcements[index];
+                          return _buildAnnouncementCard(announcement);
+                        },
+                      );
+                    },
                   ),
-                ],
-              ),
-            );
-          }
-
-          if (provider.announcements.isEmpty) {
-            return const Center(
-              child: Text(
-                'No announcements yet.',
-                style: TextStyle(color: Colors.white70, fontSize: 16),
-              ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: provider.announcements.length,
-            itemBuilder: (context, index) {
-              final announcement = provider.announcements[index];
-              return _buildAnnouncementCard(context, announcement);
-            },
-          );
-        },
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -164,9 +198,11 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
                     ),
                   ),
                 ),
-                if (announcement.createdByUsername == 'Admin') // Highlight Admin posts
+                if (announcement.createdByUsername ==
+                    'Admin') // Highlight Admin posts
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.redAccent.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
