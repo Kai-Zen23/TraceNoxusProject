@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/announcement_provider.dart';
+import '../providers/auth_provider.dart';
 import '../models/announcement_model.dart';
 import 'package:intl/intl.dart';
 
@@ -17,6 +18,45 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
     super.initState();
     Future.microtask(() =>
         Provider.of<AnnouncementProvider>(context, listen: false).fetchAnnouncements());
+  }
+
+  Future<void> _deleteAnnouncement(int id) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Announcement'),
+        content: const Text('Are you sure you want to delete this announcement?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      if (!mounted) return;
+      await Provider.of<AnnouncementProvider>(context, listen: false).deleteAnnouncement(id);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Announcement deleted'), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   @override
@@ -75,7 +115,7 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
             itemCount: provider.announcements.length,
             itemBuilder: (context, index) {
               final announcement = provider.announcements[index];
-              return _buildAnnouncementCard(announcement);
+              return _buildAnnouncementCard(context, announcement);
             },
           );
         },
@@ -83,10 +123,14 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
     );
   }
 
-  Widget _buildAnnouncementCard(Announcement announcement) {
+  Widget _buildAnnouncementCard(BuildContext context, Announcement announcement) {
     // Format date
     final date = DateTime.parse(announcement.createdAt);
     final formattedDate = DateFormat('MMM d, yyyy • h:mm a').format(date);
+    
+    // Check if user is admin
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final bool isAdmin = authProvider.currentUser?.isAdmin ?? false;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -137,6 +181,13 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
                       ),
                     ),
                   ),
+                  
+                if (isAdmin)
+                   IconButton(
+                     icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                     onPressed: () => _deleteAnnouncement(announcement.id),
+                     tooltip: 'Delete Announcement',
+                   ),
               ],
             ),
             const SizedBox(height: 8),

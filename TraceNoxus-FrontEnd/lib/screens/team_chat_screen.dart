@@ -6,6 +6,7 @@ import 'package:TraceNoxus/providers/friend_provider.dart';
 import 'package:TraceNoxus/providers/room_chat_provider.dart';
 import 'package:TraceNoxus/core/utils/message_date_utils.dart';
 import 'other_user_profile_screen.dart';
+import 'package:TraceNoxus/core/constants/app_constants.dart';
 
 class TeamChatScreen extends StatefulWidget {
   const TeamChatScreen({required this.config, super.key});
@@ -176,56 +177,112 @@ class _ChatListView extends StatelessWidget {
         final displayName =
             (message.senderName ?? friend['username'] ?? fallback).toString();
 
-        return Align(
-          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 6),
-            padding: const EdgeInsets.all(12),
-            constraints: const BoxConstraints(maxWidth: 280),
-            decoration: BoxDecoration(
-              color: isMe
-                  ? const Color(0xFF4BA3C3).withOpacity(0.9)
-                  : Colors.black.withOpacity(0.35),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment:
-                  isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-              children: [
-                GestureDetector(
-                  onTap: () {
-                     if (!isMe) _showProfile(context, friend);
-                  },
-                  child: Text(
-                    displayName,
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  message.content,
-                  style: const TextStyle(color: Colors.white),
-                ),
-                const SizedBox(height: 2),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    formatMessageTimestamp(message.timestamp),
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
-                      fontSize: 10,
-                    ),
-                  ),
-                ),
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(
+            mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!isMe) ...[
+                 GestureDetector(
+                   onTap: () => _showProfile(context, friend),
+                   child: _buildAvatar(message, friend, displayName),
+                 ),
+                 const SizedBox(width: 8),
               ],
-            ),
+              Flexible(
+                  child: GestureDetector(
+                    onLongPress: isMe ? () {
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Delete Message'),
+                          content: const Text('Are you sure you want to delete this message?'),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                            TextButton(
+                              onPressed: () {
+                                context.read<RoomChatProvider>().deleteMessage(message.id);
+                                Navigator.pop(ctx);
+                              },
+                              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                            ),
+                          ],
+                        ),
+                      );
+                    } : null,
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      constraints: const BoxConstraints(maxWidth: 280),
+                      decoration: BoxDecoration(
+                        color: isMe
+                            ? const Color(0xFF4BA3C3).withOpacity(0.9)
+                            : Colors.black.withOpacity(0.35),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment:
+                            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                               if (!isMe) _showProfile(context, friend);
+                            },
+                            child: Text(
+                              displayName,
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.8),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            message.content,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          const SizedBox(height: 2),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              formatMessageTimestamp(message.timestamp),
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.5),
+                                fontSize: 10,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ),
+              if (isMe) ...[
+                const SizedBox(width: 8),
+                _buildAvatar(message, friend, displayName),
+              ],
+            ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildAvatar(dynamic m, Map<String, dynamic> user, String displayName) {
+    String? img = m.senderProfileImage ?? user['profile_image'];
+    if (img != null) {
+      if (img.startsWith('file://')) img = img.replaceAll('file://', '');
+      if (!img.startsWith('http')) img = '${AppConstants.baseUrl}$img';
+    }
+    return CircleAvatar(
+      radius: 16,
+      backgroundColor: const Color(0xFF2E5E88),
+      backgroundImage: img != null ? NetworkImage(img) : null,
+      child: img == null
+          ? Text(displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
+              style: const TextStyle(color: Colors.white))
+          : null,
     );
   }
 }

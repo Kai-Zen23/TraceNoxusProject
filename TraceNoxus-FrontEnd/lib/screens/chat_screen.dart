@@ -6,6 +6,7 @@ import '../providers/message_provider.dart';
 import '../providers/auth_provider.dart';
 
 import '../providers/friend_provider.dart';
+import 'package:TraceNoxus/core/constants/app_constants.dart';
 
 class ChatScreen extends StatefulWidget {
   final int otherUserId;
@@ -90,7 +91,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       final m = provider.messages[index];
                       final isMe = m.sender == me;
                       return GestureDetector(
-                        onLongPress: () {
+                        onLongPress: isMe ? () {
                           showDialog(
                             context: context,
                             builder: (ctx) => AlertDialog(
@@ -108,7 +109,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               ],
                             ),
                           );
-                        },
+                        } : null,
                         child: Align(
                           alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
                           child: Row(
@@ -116,19 +117,10 @@ class _ChatScreenState extends State<ChatScreen> {
                             mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              if (!isMe) ...[
-                                CircleAvatar(
-                                  radius: 16,
-                                  backgroundColor: Colors.grey[800],
-                                  backgroundImage: m.senderProfileImage != null
-                                      ? NetworkImage(m.senderProfileImage!)
-                                      : null,
-                                  child: m.senderProfileImage == null
-                                      ? const Icon(Icons.person, color: Colors.white, size: 16)
-                                      : null,
-                                ),
+                              if (!isMe)
+                                _buildProfileImage(m, user),
+                              if (!isMe)
                                 const SizedBox(width: 8),
-                              ],
                               Column(
                                 crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                                 children: [
@@ -213,6 +205,20 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ],
       ),
+    );
+  }
+  Widget _buildProfileImage(dynamic m, Map<String, dynamic> user) {
+    String? otherImage = m.senderProfileImage ?? user['profile_image'];
+    if (otherImage != null) {
+      if (otherImage.startsWith('file://')) otherImage = otherImage.replaceAll('file://', '');
+      if (!otherImage.startsWith('http')) otherImage = '${AppConstants.baseUrl}$otherImage';
+    }
+
+    return CircleAvatar(
+      radius: 16,
+      backgroundColor: Colors.grey[800],
+      backgroundImage: otherImage != null ? NetworkImage(otherImage) : null,
+      child: otherImage == null ? const Icon(Icons.person, color: Colors.white, size: 16) : null,
     );
   }
 }

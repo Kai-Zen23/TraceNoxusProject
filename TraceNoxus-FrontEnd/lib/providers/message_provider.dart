@@ -173,15 +173,16 @@ class MessageProvider extends ChangeNotifier {
     final uri = Uri.parse(AppConstants.baseUrl);
     final wsScheme = uri.scheme == 'https' ? 'wss' : 'ws';
     
-    // Construct authority (host:port) only if port is explicit and non-default
     String hostPart = uri.host;
-    if (uri.hasPort && uri.port != 0 && uri.port != 80 && uri.port != 443) {
+    if (uri.hasPort && uri.port > 0 && uri.port != 80 && uri.port != 443) {
       hostPart = '$hostPart:${uri.port}';
     }
 
-    final wsUrl = Uri.parse('$wsScheme://$hostPart/ws/dm/$otherUserId/?token=$token');
+    final urlString = '$wsScheme://$hostPart/ws/dm/$otherUserId/?token=$token';
+    print('DEBUG: Connecting to DM WebSocket: $urlString');
+    
+    final wsUrl = Uri.parse(urlString);
 
-    print('Connecting to DM WebSocket: $wsUrl');
     try {
       _channel = IOWebSocketChannel.connect(wsUrl);
       _channel!.stream.listen((event) {

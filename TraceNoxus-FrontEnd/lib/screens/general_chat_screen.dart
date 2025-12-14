@@ -6,9 +6,11 @@ import 'package:TraceNoxus/providers/room_chat_provider.dart';
 import 'package:TraceNoxus/providers/friend_provider.dart';
 import 'package:TraceNoxus/providers/auth_provider.dart';
 import 'other_user_profile_screen.dart';
+import 'package:TraceNoxus/core/constants/app_constants.dart';
 
 class GeneralChatScreen extends StatefulWidget {
   const GeneralChatScreen({super.key});
+  
   @override
   State<GeneralChatScreen> createState() => _GeneralChatScreenState();
 }
@@ -98,15 +100,7 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
                             if (!isMe)
                               GestureDetector(
                                 onTap: () => _showProfile(context, user),
-                                child: CircleAvatar(
-                                  radius: 16,
-                                  backgroundColor: const Color(0xFF2E5E88),
-                                  backgroundImage: m.senderProfileImage != null ? NetworkImage(m.senderProfileImage!) : null,
-                                  child: m.senderProfileImage == null
-                                      ? Text(displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
-                                          style: const TextStyle(color: Colors.white))
-                                      : null,
-                                ),
+                                child: _buildAvatar(m, user, displayName),
                               ),
                             const SizedBox(width: 8),
                             Flexible(
@@ -121,13 +115,37 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
                                         style: const TextStyle(color: Colors.white70, fontSize: 10)),
                                   ),
                                   const SizedBox(height: 2),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                    decoration: BoxDecoration(
-                                      color: isMe ? const Color(0xFF3A8FB7) : const Color(0xFF2E5E88),
-                                      borderRadius: BorderRadius.circular(16),
+                                  GestureDetector(
+                                    onLongPress: isMe ? () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (ctx) => AlertDialog(
+                                          title: const Text('Delete Message'),
+                                          content: const Text('Are you sure you want to delete this message?'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(ctx),
+                                              child: const Text('Cancel'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                context.read<RoomChatProvider>().deleteMessage(m.id);
+                                                Navigator.pop(ctx);
+                                              },
+                                              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    } : null,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                      decoration: BoxDecoration(
+                                        color: isMe ? const Color(0xFF3A8FB7) : const Color(0xFF2E5E88),
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Text(m.content, style: const TextStyle(color: Colors.white)),
                                     ),
-                                    child: Text(m.content, style: const TextStyle(color: Colors.white)),
                                   ),
                                   Padding(
                                     padding: const EdgeInsets.only(top: 2, left: 4, right: 4),
@@ -144,10 +162,15 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
                               CircleAvatar(
                                 radius: 16,
                                 backgroundColor: const Color(0xFF3A8FB7),
-                                child: Text(
-                                  (auth.currentUser?.username ?? 'Me')[0].toUpperCase(),
-                                  style: const TextStyle(color: Colors.white),
-                                ),
+                                backgroundImage: auth.currentUser?.profileImageUrl != null
+                                    ? NetworkImage(auth.currentUser!.profileImageUrl!)
+                                    : null,
+                                child: auth.currentUser?.profileImageUrl == null
+                                    ? Text(
+                                        (auth.currentUser?.username ?? 'Me')[0].toUpperCase(),
+                                        style: const TextStyle(color: Colors.white),
+                                      )
+                                    : null,
                               ),
                           ],
                         ),
@@ -194,6 +217,22 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
           ),
         ],
       ),
+    );
+  }
+  Widget _buildAvatar(dynamic m, Map<String, dynamic> user, String displayName) {
+    String? img = m.senderProfileImage ?? user['profile_image'];
+    if (img != null) {
+      if (img.startsWith('file://')) img = img.replaceAll('file://', '');
+      if (!img.startsWith('http')) img = '${AppConstants.baseUrl}$img';
+    }
+    return CircleAvatar(
+      radius: 16,
+      backgroundColor: const Color(0xFF2E5E88),
+      backgroundImage: img != null ? NetworkImage(img) : null,
+      child: img == null
+          ? Text(displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
+              style: const TextStyle(color: Colors.white))
+          : null,
     );
   }
 }

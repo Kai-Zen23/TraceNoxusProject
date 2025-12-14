@@ -23,4 +23,11 @@ class RoomMessageService {
     final r = await _dio.post('$_baseUrl/api/room-messages/', data: {'room': room, 'content': content}, options: Options(headers: {'Authorization': 'Bearer $t'}));
     return MessageModel.fromJson(Map<String, dynamic>.from(r.data));
   }
+  Future<void> deleteRoomMessage(int messageId) async {
+    final t = await _token();
+    await _dio.delete(
+      '$_baseUrl/api/room-messages/$messageId/',
+      options: Options(headers: {'Authorization': 'Bearer $t'}),
+    );
+  }
 }
