@@ -11,6 +11,7 @@ import '../screens/settings_screen.dart';
 import '../providers/admin_provider.dart';
 import '../providers/notification_provider.dart';
 import '../providers/highlight_provider.dart';
+import '../providers/announcement_provider.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({Key? key}) : super(key: key);
@@ -19,21 +20,15 @@ class AdminDashboardScreen extends StatefulWidget {
   State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
 }
 
-
-
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   int _selectedIndex = 0;
   bool _isDarkMode = false;
-
-  // Mock Dark Mode state
 
   void _toggleTheme() {
     setState(() {
       _isDarkMode = !_isDarkMode;
     });
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -53,43 +48,41 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       );
     }
 
-
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text(''),
-        backgroundColor: Colors.black,
-        elevation: 0,
-        foregroundColor: Colors.white,
-        actions: [
-          // Role Mode Switch (Admin only)
-          if (authProvider.canSwitchRoles)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Row(
+        title:  // Role Mode Switch (Admin only) - MOVED TO LEFT (Title)
+          authProvider.canSwitchRoles
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    authProvider.isInUserMode ? 'User Mode' : 'Admin Mode',
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(width: 8),
                   Switch(
                     value: !authProvider.isInUserMode,
-                    onChanged: (isAdmin) {
+                     onChanged: (isAdmin) {
                       if (isAdmin) {
-                        _switchToAdminMode(context, authProvider);
+                         _switchToAdminMode(context, authProvider);
                       } else {
                         _showSwitchToUserDialog(context, authProvider);
                       }
                     },
-                    activeColor: Colors.green,
-                    inactiveThumbColor: Colors.blue,
+                     activeColor: Colors.white,
+                     activeTrackColor: Colors.blueAccent,
+                     inactiveThumbColor: Colors.grey,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    authProvider.isInUserMode ? 'User Mode' : 'Admin Mode',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
                   ),
                 ],
-              ),
-            ),
+              )
+            : const Text('Admin Dashboard'),
+        backgroundColor: Colors.transparent, // Transparent for background image
+        elevation: 0,
+        foregroundColor: Colors.white,
+        actions: [
           IconButton(
-            icon: Icon(_isDarkMode ? Icons.light_mode : Icons.dark_mode),
+            icon: Icon(_isDarkMode ? Icons.dark_mode : Icons.light_mode), // Swapped icon logic to match common toggle UI
             onPressed: _toggleTheme,
             tooltip: 'Toggle Theme',
           ),
@@ -103,8 +96,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             tooltip: 'Profile',
           ),
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
+            icon: const Icon(Icons.logout), // Changed to logout icon
+             onPressed: () async {
               final navigator = Navigator.of(context);
               await authProvider.logout();
               if (mounted) {
@@ -134,8 +127,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                  begin: Alignment.topCenter,
                  end: Alignment.bottomCenter,
                  colors: [
-                   Colors.black.withOpacity(0.3),
-                   Colors.black.withOpacity(0.5),
+                   const Color(0xFF0F172A).withOpacity(0.4),
+                   const Color(0xFF0F172A).withOpacity(0.8),
                  ],
                ),
              ),
@@ -148,32 +141,76 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               const ProfileScreen(),
             ],
           ),
+          // Custom Bottom Navigation Bar
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              margin: EdgeInsets.zero,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    const Color(0xFF335C81).withOpacity(0.95), // Steel Blue / Greyish Blue
+                    const Color(0xFF1E3A5F).withOpacity(0.98), // Darker Blue
+                  ],
+                ),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildCustomNavItem(0, Icons.grid_view_rounded, 'Dashboard'), // Grid icon for dashboard
+                  _buildCustomNavItem(1, Icons.people_alt_rounded, 'Users'),
+                  _buildCustomNavItem(2, Icons.person_rounded, 'Profile'),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        backgroundColor: Colors.white.withOpacity(0.1), // Semi-transparent nav bar
-        selectedItemColor: Colors.blueAccent,
-        unselectedItemColor: Colors.black,
-        elevation: 0,
-        type: BottomNavigationBarType.fixed, // Ensure items are visible
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Dashboard',
+    );
+  }
+
+  Widget _buildCustomNavItem(int index, IconData icon, String label) {
+    final isSelected = _selectedIndex == index;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedIndex = index),
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: isSelected
+                ? BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    shape: BoxShape.rectangle,
+                    borderRadius: BorderRadius.circular(12),
+                  )
+                : null,
+            child: Icon(
+              icon,
+              color: isSelected ? Colors.white : Colors.white70,
+              size: 28,
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Users',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : Colors.white70,
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            ),
           ),
         ],
       ),
@@ -259,9 +296,11 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final adminProvider = Provider.of<AdminProvider>(context);
-    // Removed unused user variable
-    final textColor = widget.isDarkMode ? Colors.white : Colors.black87;
-    final cardColor = widget.isDarkMode ? const Color(0xFF1E293B) : Colors.white;
+    final user = authProvider.currentUser;
+
+    // Use null-aware operators for safe defaults if user is null (though should be checked in parent)
+    final email = user?.email ?? 'admin@example.com';
+    final role = user?.role?.toUpperCase() ?? 'ADMIN';
 
     final stats = adminProvider.dashboardStats;
     final totalUsers = stats?['total_users']?.toString() ?? '...';
@@ -270,23 +309,81 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
 
     return SingleChildScrollView(
       padding: EdgeInsets.only(
-        top: kToolbarHeight + MediaQuery.of(context).padding.top + 16, // Add safe area + toolbar height
+        top: kToolbarHeight + MediaQuery.of(context).padding.top + 16,
         left: 16.0,
         right: 16.0,
-        bottom: 16.0,
+        bottom: 120.0,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
+          
           Text(
             'Admin Dashboard',
             style: const TextStyle(
-              fontSize: 40,
+              fontSize: 24, // Reduced slightly to match design
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: Colors.white70,
             ),
           ),
+          const SizedBox(height: 16),
+
+          // Welcome Banner
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF2E5E88).withOpacity(0.8), // Dark Blue
+                      const Color(0xFF3A8FB7).withOpacity(0.6), // Lighter Blue
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white.withOpacity(0.1)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Welcome, Admin!',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Email: $email',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          const TextSpan(text: 'Role: ', style: TextStyle(color: Colors.white70)),
+                          TextSpan(text: role, style: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                       style: const TextStyle(fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 24),
 
           // System Status Snapshot
           Text(
@@ -298,6 +395,7 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
             ),
           ),
           const SizedBox(height: 16),
+          
           if (adminProvider.isLoading)
             const Center(child: CircularProgressIndicator())
           else if (adminProvider.error != null)
@@ -307,22 +405,23 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
               children: [
                 Row(
                   children: [
-                    Expanded(child: _buildStatusCard('Total Users', totalUsers, Icons.people, Colors.blue, cardColor, textColor)),
+                    Expanded(child: _buildStatusCard('Total Users', totalUsers, Icons.people, Colors.blueAccent)),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildStatusCard('Active Now', activeUsers, Icons.wifi, Colors.green, cardColor, textColor)),
+                    Expanded(child: _buildStatusCard('Active Now', activeUsers, Icons.wifi, Colors.greenAccent)),
                   ],
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: _buildStatusCard('Pending', pendingUsers, Icons.pending_actions, Colors.orange, cardColor, textColor)),
+                    Expanded(child: _buildStatusCard('Pending', pendingUsers, Icons.assignment_late_outlined, Colors.orangeAccent)),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildStatusCard('Server', 'Online', Icons.dns, Colors.purple, cardColor, textColor)),
+                    Expanded(child: _buildStatusCard('Server', 'Online', Icons.dns, Colors.pinkAccent)),
                   ],
                 ),
               ],
             ),
-          const SizedBox(height: 1),
+            
+          const SizedBox(height: 24),
 
           // Quick Actions
           Text(
@@ -333,6 +432,7 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
               color: Colors.white,
             ),
           ),
+           const SizedBox(height: 16),
           GridView.count(
             padding: EdgeInsets.zero,
             crossAxisCount: 2,
@@ -340,19 +440,14 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
             physics: const NeverScrollableScrollPhysics(),
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
-            childAspectRatio: 1.5,
+            childAspectRatio: 1.6, // Wider cards
             children: [
-              _buildActionCard(context, icon: Icons.notifications, title: 'Send Notification', color: Colors.orangeAccent, cardColor: cardColor, textColor: textColor, onTap: () => _showCreateNotificationDialog(context)),
-              _buildActionCard(context, icon: Icons.video_library, title: 'Manage Highlights', color: Colors.deepPurple, cardColor: cardColor, textColor: textColor, onTap: () => _showUploadHighlightOptions(context)),
-              _buildActionCard(context, icon: Icons.people, title: 'Manage Users', color: Colors.blue, cardColor: cardColor, textColor: textColor, onTap: () => Navigator.pushNamed(context, '/user-management')),
-              _buildActionCard(context, icon: Icons.groups, title: 'Manage Teams', color: Colors.redAccent, cardColor: cardColor, textColor: textColor, onTap: () => Navigator.pushNamed(context, '/teams')),
-              _buildActionCard(context, icon: Icons.event, title: 'Events', color: Colors.teal, cardColor: cardColor, textColor: textColor, onTap: () => Navigator.pushNamed(context, '/calendar')),
-              _buildActionCard(context, icon: Icons.analytics, title: 'Analytics', color: Colors.green, cardColor: cardColor, textColor: textColor, onTap: () => _showComingSoon(context)),
-              _buildActionCard(context, icon: Icons.admin_panel_settings, title: 'Roles & Perms', color: Colors.indigo, cardColor: cardColor, textColor: textColor, onTap: () => _showComingSoon(context)),
-              _buildActionCard(context, icon: Icons.history, title: 'Audit Logs', color: Colors.brown, cardColor: cardColor, textColor: textColor, onTap: () => _showComingSoon(context)),
-              _buildActionCard(context, icon: Icons.download, title: 'Export Data', color: Colors.deepOrange, cardColor: cardColor, textColor: textColor, onTap: () => _showComingSoon(context)),
-              _buildActionCard(context, icon: Icons.report, title: 'Reports', color: Colors.purple, cardColor: cardColor, textColor: textColor, onTap: () => _showComingSoon(context)),
-              _buildActionCard(context, icon: Icons.settings, title: 'Settings', color: Colors.grey, cardColor: cardColor, textColor: textColor, onTap: () {
+              _buildActionCard(context, icon: Icons.notifications_active, title: 'Send Notification', color: Colors.amber, onTap: () => _showCreateNotificationDialog(context)),
+              _buildActionCard(context, icon: Icons.video_library, title: 'Manage Highlights', color: Colors.purpleAccent, onTap: () => _showUploadHighlightOptions(context)),
+              _buildActionCard(context, icon: Icons.people, title: 'Manage Users', color: Colors.blue, onTap: () => Navigator.pushNamed(context, '/user-management')),
+              _buildActionCard(context, icon: Icons.groups, title: 'Manage Teams', color: Colors.redAccent, onTap: () => Navigator.pushNamed(context, '/teams')),
+              _buildActionCard(context, icon: Icons.calendar_month, title: 'Events', color: Colors.lightBlueAccent, onTap: () => Navigator.pushNamed(context, '/calendar')),
+              _buildActionCard(context, icon: Icons.settings, title: 'Settings', color: Colors.grey, onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
               }),
             ],
@@ -363,49 +458,42 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
     );
   }
 
-  Widget _buildStatusCard(String title, String value, IconData icon, Color iconColor, Color cardColor, Color textColor) {
+  Widget _buildStatusCard(String title, String value, IconData icon, Color iconColor) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20), // Use 20 for matching curve
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
+          height: 100, // Fixed height for uniformity
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.2)),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withOpacity(0.2),
-                Colors.white.withOpacity(0.05),
-              ],
-            ),
+            color: const Color(0xFF1E293B).withOpacity(0.4), // Darker glass base
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withOpacity(0.05)),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Column( // Use Stack or Row/Column mix to match image perfectly if needed, currently matching layout
+             crossAxisAlignment: CrossAxisAlignment.start,
+             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(icon, color: iconColor, size: 24),
-                  Text(
+                   Icon(icon, color: iconColor, size: 28),
+                   Text(
                     value,
                     style: const TextStyle(
-                      fontSize: 20,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white, // Always white on glass
+                      color: Colors.white,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
               Text(
                 title,
                 style: const TextStyle(
                   fontSize: 14,
-                  color: Colors.white70, // Always light on glass
+                  color: Colors.white70,
                 ),
               ),
             ],
@@ -415,52 +503,40 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
     );
   }
 
-
-
   Widget _buildActionCard(
     BuildContext context, {
     required IconData icon,
     required String title,
     required Color color,
-    required Color cardColor,
-    required Color textColor,
     required VoidCallback onTap,
   }) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.2)),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withOpacity(0.2),
-                Colors.white.withOpacity(0.05),
-              ],
-            ),
+            color: const Color(0xFF1E293B).withOpacity(0.4),
+             borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withOpacity(0.05)),
           ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: onTap,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(icon, size: 32, color: color),
+                    Icon(icon, size: 36, color: color),
                     const SizedBox(height: 8),
                     Text(
                       title,
                       style: const TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w500,
                         color: Colors.white,
                       ),
                       textAlign: TextAlign.center,
@@ -519,18 +595,20 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
 
                       setState(() => isLoading = true);
                       try {
-                        await Provider.of<NotificationProvider>(context, listen: false)
-                            .sendNotification(titleController.text, contentController.text);
+                        // Use AnnouncementProvider to create Announcement + Notification + SMS
+                        await Provider.of<AnnouncementProvider>(context, listen: false)
+                            .addAnnouncement(titleController.text, contentController.text);
+
                         if (mounted) {
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Notification sent successfully!')),
+                            const SnackBar(content: Text('Announcement Posted & Notification Sent!')),
                           );
                         }
                       } catch (e) {
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Failed to send notification: $e')),
+                            SnackBar(content: Text('Failed to post announcement: $e')),
                           );
                         }
                       } finally {
@@ -539,17 +617,11 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
                         }
                       }
                     },
-              child: const Text('Push'),
+              child: const Text('Post'), // Changed from 'Push' to 'Post'
             ),
           ],
         ),
       ),
-    );
-  }
-
-  void _showComingSoon(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Feature coming soon!')),
     );
   }
 
@@ -578,8 +650,6 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
        ),
      );
   }
-
-
 
   Future<void> _showUrlUploadDialog() async {
       final TextEditingController titleController = TextEditingController();

@@ -7,6 +7,7 @@ import 'package:TraceNoxus/providers/room_chat_provider.dart';
 import 'package:TraceNoxus/core/utils/message_date_utils.dart';
 import '../widgets/styled_back_button.dart';
 import 'other_user_profile_screen.dart';
+import 'package:TraceNoxus/core/constants/app_constants.dart';
 
 class TeamChatScreen extends StatefulWidget {
   const TeamChatScreen({required this.config, super.key});
@@ -221,12 +222,32 @@ class _ChatListView extends StatelessWidget {
                       fontSize: 10,
                     ),
                   ),
-                ),
+              ),
+              if (isMe) ...[
+                const SizedBox(width: 8),
+                _buildAvatar(message, friend, displayName),
               ],
-            ),
+            ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildAvatar(dynamic m, Map<String, dynamic> user, String displayName) {
+    String? img = m.senderProfileImage ?? user['profile_image'];
+    if (img != null) {
+      if (img.startsWith('file://')) img = img.replaceAll('file://', '');
+      if (!img.startsWith('http')) img = '${AppConstants.baseUrl}$img';
+    }
+    return CircleAvatar(
+      radius: 16,
+      backgroundColor: const Color(0xFF2E5E88),
+      backgroundImage: img != null ? NetworkImage(img) : null,
+      child: img == null
+          ? Text(displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
+              style: const TextStyle(color: Colors.white))
+          : null,
     );
   }
 }

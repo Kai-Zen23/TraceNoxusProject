@@ -7,9 +7,11 @@ import 'package:TraceNoxus/providers/room_chat_provider.dart';
 import 'package:TraceNoxus/providers/friend_provider.dart';
 import 'package:TraceNoxus/providers/auth_provider.dart';
 import 'other_user_profile_screen.dart';
+import 'package:TraceNoxus/core/constants/app_constants.dart';
 
 class GeneralChatScreen extends StatefulWidget {
   const GeneralChatScreen({super.key});
+  
   @override
   State<GeneralChatScreen> createState() => _GeneralChatScreenState();
 }

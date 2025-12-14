@@ -70,7 +70,9 @@ class FriendRequestsProvider extends ChangeNotifier {
       queryParameters: {'type': 'incoming'},
       options: Options(headers: {'Authorization': 'Bearer $t'}),
     );
-    _incoming = List<Map<String, dynamic>>.from(r.data);
+    _incoming = List<Map<String, dynamic>>.from(r.data)
+        .where((e) => e['status'] == 'pending')
+        .toList();
   }
 
   Future<void> _loadOutgoing() async {
@@ -80,7 +82,9 @@ class FriendRequestsProvider extends ChangeNotifier {
       queryParameters: {'type': 'outgoing'},
       options: Options(headers: {'Authorization': 'Bearer $t'}),
     );
-    _outgoing = List<Map<String, dynamic>>.from(r.data);
+    _outgoing = List<Map<String, dynamic>>.from(r.data)
+        .where((e) => e['status'] == 'pending')
+        .toList();
   }
 
   Future<void> sendRequest(int receiverId) async {
@@ -99,7 +103,8 @@ class FriendRequestsProvider extends ChangeNotifier {
       '$_baseUrl/api/friend-requests/$requestId/accept/',
       options: Options(headers: {'Authorization': 'Bearer $t'}),
     );
-    await refresh();
+    _incoming.removeWhere((r) => r['id'] == requestId);
+    notifyListeners();
   }
 
   Future<void> reject(int requestId) async {
@@ -108,7 +113,8 @@ class FriendRequestsProvider extends ChangeNotifier {
       '$_baseUrl/api/friend-requests/$requestId/reject/',
       options: Options(headers: {'Authorization': 'Bearer $t'}),
     );
-    await refresh();
+    _incoming.removeWhere((r) => r['id'] == requestId);
+    notifyListeners();
   }
 }
 

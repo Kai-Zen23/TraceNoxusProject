@@ -13,6 +13,11 @@ class FriendProvider extends ChangeNotifier {
   String? get error => _error;
   List<Map<String, dynamic>> get allUsers => _allUsers;
   Set<int> get friendIds => _friendRecords.map((e) => e['friend'] as int).toSet();
+  
+  List<Map<String, dynamic>> get friends {
+    final ids = friendIds;
+    return _allUsers.where((u) => ids.contains(u['id'])).toList();
+  }
 
   Future<void> loadAllUsers() async {
     _isLoading = true; _error = null; notifyListeners();

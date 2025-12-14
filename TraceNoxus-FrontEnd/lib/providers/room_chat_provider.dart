@@ -38,7 +38,10 @@ class RoomChatProvider extends ChangeNotifier {
     final t = await _storage.read(key: 'token');
     final uri = Uri.parse(AppConstants.baseUrl);
     final wsScheme = uri.scheme == 'https' ? 'wss' : 'ws';
-    final hostPort = uri.hasPort ? '${uri.host}:${uri.port}' : uri.host;
+    String hostPort = uri.host;
+    if (uri.hasPort && uri.port > 0 && uri.port != 80 && uri.port != 443) {
+      hostPort = '$hostPort:${uri.port}';
+    }
     final wsUrl = Uri.parse('$wsScheme://$hostPort/ws/chat/$room/?token=$t');
     _channel = IOWebSocketChannel.connect(wsUrl);
     _channel!.stream.listen((event) {
@@ -70,6 +73,16 @@ class RoomChatProvider extends ChangeNotifier {
   Future<void> send(String content, {String room = 'general'}) async {
     if (_channel != null) {
       _channel!.sink.add(jsonEncode({'message': content}));
+    }
+  }
+
+  Future<void> deleteMessage(int messageId) async {
+    try {
+      await _service.deleteRoomMessage(messageId);
+      _messages.removeWhere((m) => m.id == messageId);
+      notifyListeners();
+    } catch (_) {
+      // Handle error or just ignore
     }
   }
 }
