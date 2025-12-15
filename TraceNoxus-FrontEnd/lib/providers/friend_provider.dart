@@ -66,15 +66,26 @@ class FriendProvider extends ChangeNotifier {
 
   Future<void> removeFriendByUserId(int userId) async {
     try {
-      final rec = _friendRecords.firstWhere((r) => r['friend'] == userId,
+      print('DEBUG: Attempting to remove friend with userId: $userId. Available records: ${_friendRecords.length}');
+      
+      final rec = _friendRecords.firstWhere((r) {
+        // Robust comparison (handle int vs string from JSON)
+        final friendId = r['friend'];
+        return friendId.toString() == userId.toString();
+      },
           orElse: () => {});
+      
       if (rec.isEmpty) {
         print('Error: No friendship record found for user $userId');
+        _error = 'Friendship not found';
+        notifyListeners();
         return;
       }
+      
       print('DEBUG: Removing friendship. Record: $rec');
       await _service.removeFriend(rec['id'] as int);
       await loadFriends();
+      await loadAllUsers(); // Refresh all users to update Explore/Friends lists
     } on DioException catch (e) {
       print('DioError removing friend: ${e.message}');
       if (e.response != null) {

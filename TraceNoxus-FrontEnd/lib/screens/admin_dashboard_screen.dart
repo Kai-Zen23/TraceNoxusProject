@@ -82,11 +82,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         foregroundColor: Colors.white,
         actions: [
           IconButton(
-            icon: Icon(_isDarkMode ? Icons.dark_mode : Icons.light_mode), // Swapped icon logic to match common toggle UI
-            onPressed: _toggleTheme,
-            tooltip: 'Toggle Theme',
-          ),
-          IconButton(
             icon: const Icon(Icons.account_circle),
             onPressed: () {
               setState(() {

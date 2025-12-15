@@ -91,25 +91,9 @@ class _ChatScreenState extends State<ChatScreen> {
                       final m = provider.messages[index];
                       final isMe = m.sender == me;
                       return GestureDetector(
-                        onLongPress: isMe ? () {
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: const Text('Delete Message'),
-                              content: const Text('Are you sure you want to delete this message?'),
-                              actions: [
-                                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-                                TextButton(
-                                  onPressed: () {
-                                    provider.deleteMessage(m.id);
-                                    Navigator.pop(ctx);
-                                  },
-                                  child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                                ),
-                              ],
-                            ),
-                          );
-                        } : null,
+                        onLongPress: isMe
+                            ? () => _showUnsendOptions(context, m.id)
+                            : null,
                         child: Align(
                           alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
                           child: Row(
@@ -207,6 +191,79 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
   }
+  void _showUnsendOptions(BuildContext context, int messageId) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF1E293B),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+              leading: const Icon(Icons.delete_outline, color: Colors.redAccent),
+              title: const Text('Unsend',
+                  style: TextStyle(
+                      color: Colors.redAccent, fontWeight: FontWeight.w600)),
+              subtitle: const Text(
+                'Remove this message for everyone',
+                style: TextStyle(color: Colors.white54, fontSize: 12),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _confirmUnsend(context, messageId);
+              },
+            ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _confirmUnsend(BuildContext context, int messageId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        title: const Text('Unsend Message?',
+            style: TextStyle(color: Colors.white)),
+        content: const Text(
+            'This message will be permanently removed for everyone in the chat.',
+            style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Provider.of<MessageProvider>(context, listen: false)
+                  .deleteMessage(messageId);
+              Navigator.pop(context);
+            },
+            child: const Text('Unsend', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildProfileImage(dynamic m, Map<String, dynamic> user) {
     String? otherImage = m.senderProfileImage ?? user['profile_image'];
     if (otherImage != null) {

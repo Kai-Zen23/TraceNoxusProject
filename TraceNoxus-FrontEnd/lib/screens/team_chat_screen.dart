@@ -144,6 +144,80 @@ class _ChatListView extends StatelessWidget {
     );
   }
 
+  void _showUnsendOptions(BuildContext context, int messageId) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF1E293B),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading:
+                    const Icon(Icons.delete_outline, color: Colors.redAccent),
+                title: const Text('Unsend',
+                    style: TextStyle(
+                        color: Colors.redAccent, fontWeight: FontWeight.w600)),
+                subtitle: const Text(
+                  'Remove this message for everyone',
+                  style: TextStyle(color: Colors.white54, fontSize: 12),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _confirmUnsend(context, messageId);
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _confirmUnsend(BuildContext context, int messageId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        title: const Text('Unsend Message?',
+            style: TextStyle(color: Colors.white)),
+        content: const Text(
+            'This message will be permanently removed for everyone in the chat.',
+            style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Provider.of<RoomChatProvider>(context, listen: false)
+                  .deleteMessage(messageId);
+              Navigator.pop(context);
+            },
+            child: const Text('Unsend', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (chat.isLoading) {
@@ -178,57 +252,78 @@ class _ChatListView extends StatelessWidget {
         final displayName =
             (message.senderName ?? friend['username'] ?? fallback).toString();
 
-        return Align(
-          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 6),
-            padding: const EdgeInsets.all(12),
-            constraints: const BoxConstraints(maxWidth: 280),
-            decoration: BoxDecoration(
-              color: isMe
-                  ? const Color(0xFF4BA3C3).withOpacity(0.9)
-                  : Colors.black.withOpacity(0.35),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment:
-                  isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-              children: [
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment:
+                isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+            children: [
+              if (!isMe) ...[
                 GestureDetector(
-                  onTap: () {
-                    if (!isMe) _showProfile(context, friend);
-                  },
-                  child: Text(
-                    displayName,
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  onTap: () => _showProfile(context, friend),
+                  child: _buildAvatar(message, friend, displayName),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  message.content,
-                  style: const TextStyle(color: Colors.white),
-                ),
-                const SizedBox(height: 2),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    formatMessageTimestamp(message.timestamp),
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
-                      fontSize: 10,
+                const SizedBox(width: 8),
+              ],
+              Flexible(
+                child: Column(
+                  crossAxisAlignment:
+                      isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                  children: [
+                    if (!isMe)
+                      GestureDetector(
+                        onTap: () {
+                          if (!isMe) _showProfile(context, friend);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 2),
+                          child: Text(
+                            displayName,
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 10,
+                            ),
+                          ),
+                        ),
+                      ),
+                    GestureDetector(
+                      onLongPress: isMe
+                          ? () => _showUnsendOptions(context, message.id)
+                          : null,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isMe
+                              ? const Color(0xFF3A8FB7)
+                              : const Color(0xFF2E5E88),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          message.content,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
                     ),
-                  ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2, left: 4, right: 4),
+                      child: Text(
+                        formatMessageTimestamp(message.timestamp),
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.6),
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               if (isMe) ...[
                 const SizedBox(width: 8),
                 _buildAvatar(message, friend, displayName),
               ],
             ],
-          ),
           ),
         );
       },
@@ -241,14 +336,26 @@ class _ChatListView extends StatelessWidget {
       if (img.startsWith('file://')) img = img.replaceAll('file://', '');
       if (!img.startsWith('http')) img = '${AppConstants.baseUrl}$img';
     }
+
+    final initials = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
+
     return CircleAvatar(
       radius: 16,
       backgroundColor: const Color(0xFF2E5E88),
-      backgroundImage: img != null ? NetworkImage(img) : null,
-      child: img == null
-          ? Text(displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
-              style: const TextStyle(color: Colors.white))
-          : null,
+      child: img != null
+          ? ClipOval(
+              child: Image.network(
+                img,
+                width: 32,
+                height: 32,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Text(initials,
+                      style: const TextStyle(color: Colors.white));
+                },
+              ),
+            )
+          : Text(initials, style: const TextStyle(color: Colors.white)),
     );
   }
 }

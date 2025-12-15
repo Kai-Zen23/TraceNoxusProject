@@ -126,7 +126,7 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
                           fontWeight: FontWeight.w600, fontSize: 13),
                       tabs: const [
                         Tab(text: 'My Friends'),
-                        Tab(text: 'Incoming'),
+                        Tab(text: 'Friend Request'),
                         Tab(text: 'Sent'),
                       ],
                     ),

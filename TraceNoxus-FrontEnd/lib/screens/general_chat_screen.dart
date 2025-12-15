@@ -55,6 +55,80 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
     );
   }
 
+  void _showUnsendOptions(BuildContext context, int messageId) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF1E293B),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading:
+                    const Icon(Icons.delete_outline, color: Colors.redAccent),
+                title: const Text('Unsend',
+                    style: TextStyle(
+                        color: Colors.redAccent, fontWeight: FontWeight.w600)),
+                subtitle: const Text(
+                  'Remove this message for everyone',
+                  style: TextStyle(color: Colors.white54, fontSize: 12),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _confirmUnsend(context, messageId);
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _confirmUnsend(BuildContext context, int messageId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        title: const Text('Unsend Message?',
+            style: TextStyle(color: Colors.white)),
+        content: const Text(
+            'This message will be permanently removed for everyone in the chat.',
+            style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Provider.of<RoomChatProvider>(context, listen: false)
+                  .deleteMessage(messageId);
+              Navigator.pop(context);
+            },
+            child: const Text('Unsend', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<RoomChatProvider>(context);
@@ -166,48 +240,63 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
                                                   fontSize: 10)),
                                         ),
                                         const SizedBox(height: 2),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 12, vertical: 10),
-                                          decoration: BoxDecoration(
-                                            color: isMe
-                                                ? const Color(0xFF3A8FB7)
-                                                : const Color(0xFF2E5E88),
-                                            borderRadius:
-                                                BorderRadius.circular(16),
-                                          ),
-                                          child: Text(m.content,
-                                              style: const TextStyle(
-                                                  color: Colors.white)),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                              top: 2, left: 4, right: 4),
-                                          child: Text(
-                                            formatMessageTimestamp(m.timestamp),
-                                            style: const TextStyle(
-                                                color: Colors.white54,
-                                                fontSize: 10),
-                                          ),
-                                        ),
-                                      ],
+                                  GestureDetector(
+                                    onLongPress: isMe
+                                        ? () => _showUnsendOptions(context, m.id)
+                                        : null,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 10),
+                                      decoration: BoxDecoration(
+                                        color: isMe
+                                            ? const Color(0xFF3A8FB7)
+                                            : const Color(0xFF2E5E88),
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Text(m.content,
+                                          style: const TextStyle(
+                                              color: Colors.white)),
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  if (isMe)
-                                    CircleAvatar(
-                                      radius: 16,
-                                      backgroundColor: const Color(0xFF3A8FB7),
-                                      child: Text(
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                        top: 2, left: 4, right: 4),
+                                    child: Text(
+                                      formatMessageTimestamp(m.timestamp),
+                                      style: const TextStyle(
+                                          color: Colors.white54,
+                                          fontSize: 10),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            if (isMe) ...[
+                              const SizedBox(width: 8),
+                              CircleAvatar(
+                                radius: 16,
+                                backgroundColor: const Color(0xFF3A8FB7),
+                                backgroundImage: m.senderProfileImage != null
+                                    ? NetworkImage(m.senderProfileImage!)
+                                    : (auth.currentUser?.profileImageUrl != null
+                                        ? NetworkImage(
+                                            auth.currentUser!.profileImageUrl!)
+                                        : null),
+                                child: (m.senderProfileImage == null &&
+                                        auth.currentUser?.profileImageUrl == null)
+                                    ? Text(
                                         (auth.currentUser?.username ?? 'Me')[0]
                                             .toUpperCase(),
                                         style: const TextStyle(
                                             color: Colors.white),
-                                      ),
-                                    ),
-                                ],
+                                      )
+                                    : null,
                               ),
-                            );
+                            ],
+                            ],
+                          ),
+                        );
                           },
                         ),
                 ),

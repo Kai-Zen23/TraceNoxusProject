@@ -93,32 +93,52 @@ class FriendRequestsProvider extends ChangeNotifier {
   }
 
   Future<void> sendRequest(int receiverId) async {
-    final t = await _token();
-    await _dio.post(
-      '$_baseUrl/api/friend-requests/',
-      data: {'receiver': receiverId},
-      options: Options(headers: {'Authorization': 'Bearer $t'}),
-    );
-    await refresh();
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final t = await _token();
+      await _dio.post(
+        '$_baseUrl/api/friend-requests/',
+        data: {'receiver': receiverId},
+        options: Options(headers: {'Authorization': 'Bearer $t'}),
+      );
+      await refresh();
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      rethrow;
+    }
   }
 
   Future<void> accept(int requestId) async {
-    final t = await _token();
-    await _dio.post(
-      '$_baseUrl/api/friend-requests/$requestId/accept/',
-      options: Options(headers: {'Authorization': 'Bearer $t'}),
-    );
-    _incoming.removeWhere((r) => r['id'] == requestId);
+    _isLoading = true;
     notifyListeners();
+    try {
+      final t = await _token();
+      await _dio.post(
+        '$_baseUrl/api/friend-requests/$requestId/accept/',
+        options: Options(headers: {'Authorization': 'Bearer $t'}),
+      );
+      _incoming.removeWhere((r) => r['id'] == requestId);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> reject(int requestId) async {
-    final t = await _token();
-    await _dio.post(
-      '$_baseUrl/api/friend-requests/$requestId/reject/',
-      options: Options(headers: {'Authorization': 'Bearer $t'}),
-    );
-    _incoming.removeWhere((r) => r['id'] == requestId);
+    _isLoading = true;
     notifyListeners();
+    try {
+      final t = await _token();
+      await _dio.post(
+        '$_baseUrl/api/friend-requests/$requestId/reject/',
+        options: Options(headers: {'Authorization': 'Bearer $t'}),
+      );
+      _incoming.removeWhere((r) => r['id'] == requestId);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }
