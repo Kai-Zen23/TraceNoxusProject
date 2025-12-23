@@ -9,8 +9,9 @@ class AuthResponse {
   final String? refresh;
   final String? message;
   final String? error;
+  final Map<String, dynamic>? user;
 
-  AuthResponse({this.token, this.refresh, this.message, this.error});
+  AuthResponse({this.token, this.refresh, this.message, this.error, this.user});
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) => _$AuthResponseFromJson(json);
   Map<String, dynamic> toJson() => _$AuthResponseToJson(this);
@@ -22,10 +23,13 @@ class RegisterRequest {
   final String username;
   final String password;
 
+  final String? phoneNumber;
+
   RegisterRequest({
     required this.email,
     required this.username,
     required this.password,
+    this.phoneNumber,
   });
 
   factory RegisterRequest.fromJson(Map<String, dynamic> json) => _$RegisterRequestFromJson(json);

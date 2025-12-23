@@ -11,6 +11,7 @@ AuthResponse _$AuthResponseFromJson(Map<String, dynamic> json) => AuthResponse(
       refresh: json['refresh'] as String?,
       message: json['message'] as String?,
       error: json['error'] as String?,
+      user: json['user'] as Map<String, dynamic>?,
     );
 
 Map<String, dynamic> _$AuthResponseToJson(AuthResponse instance) =>
@@ -19,6 +20,7 @@ Map<String, dynamic> _$AuthResponseToJson(AuthResponse instance) =>
       'refresh': instance.refresh,
       'message': instance.message,
       'error': instance.error,
+      'user': instance.user,
     };
 
 RegisterRequest _$RegisterRequestFromJson(Map<String, dynamic> json) =>
@@ -26,6 +28,7 @@ RegisterRequest _$RegisterRequestFromJson(Map<String, dynamic> json) =>
       email: json['email'] as String,
       username: json['username'] as String,
       password: json['password'] as String,
+      phoneNumber: json['phone_number'] as String?,
     );
 
 Map<String, dynamic> _$RegisterRequestToJson(RegisterRequest instance) =>
@@ -33,6 +36,7 @@ Map<String, dynamic> _$RegisterRequestToJson(RegisterRequest instance) =>
       'email': instance.email,
       'username': instance.username,
       'password': instance.password,
+      'phone_number': instance.phoneNumber,
     };
 
 OtpVerificationRequest _$OtpVerificationRequestFromJson(

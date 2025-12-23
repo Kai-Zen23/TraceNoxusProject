@@ -8,7 +8,7 @@ class AuthService {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   
   // Centralized base URL
-  static const String _baseUrl = AppConstants.baseUrl;
+  static final String _baseUrl = AppConstants.baseUrl;
 
   Future<bool> ping() async {
     try {
@@ -18,6 +18,9 @@ class AuthService {
       return false;
     }
   }
+
+  // In-memory token for current session (if rememberMe is false)
+  String? _tempToken;
 
   Future<AuthResponse> register(RegisterRequest request) async {
     try {
@@ -64,17 +67,63 @@ class AuthService {
     }
   }
 
-  Future<AuthResponse> login(LoginRequest request) async {
+  Future<AuthResponse> resendOtp(String email) async {
+    try {
+      final response = await _dio.post(
+        '$_baseUrl/api/resend-otp/',
+        data: {'email': email},
+      );
+      return AuthResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      if (e.response?.data is Map) {
+        return AuthResponse(
+          error: e.response?.data['error'] ?? 'Failed to resend OTP',
+        );
+      }
+      return AuthResponse(error: 'Failed to resend OTP: ${e.message}');
+    }
+  }
+
+  Future<AuthResponse> login(LoginRequest request, {bool rememberMe = true}) async {
     try {
       final response = await _dio.post(
         '$_baseUrl/api/login/',
         data: request.toJson(),
       );
       
-      final authResponse = AuthResponse.fromJson(response.data);
+      // Extract user data from response before creating AuthResponse
+      Map<String, dynamic>? userData;
+      if (response.data is Map && response.data['user'] != null) {
+        userData = Map<String, dynamic>.from(response.data['user']);
+      }
+      
+      // Create AuthResponse with user data
+      final authResponse = AuthResponse(
+        token: response.data['access'],
+        refresh: response.data['refresh'],
+        message: response.data['message'],
+        error: response.data['error'],
+        user: userData,
+      );
+      
       if (authResponse.token != null) {
-        await _storage.write(key: 'token', value: authResponse.token);
-        await _storage.write(key: 'refresh', value: authResponse.refresh);
+        // Always store in memory for current session
+        _tempToken = authResponse.token;
+
+        if (rememberMe) {
+          await _storage.write(key: 'token', value: authResponse.token);
+          await _storage.write(key: 'refresh', value: authResponse.refresh);
+          // Save credentials for pre-filling
+          await _storage.write(key: 'saved_email', value: request.email);
+          await _storage.write(key: 'saved_password', value: request.password);
+        } else {
+          // Clear any existing tokens if not remembering
+          await _storage.delete(key: 'token');
+          await _storage.delete(key: 'refresh');
+          // Clear saved credentials
+          await _storage.delete(key: 'saved_email');
+          await _storage.delete(key: 'saved_password');
+        }
       }
       
       return authResponse;
@@ -89,12 +138,28 @@ class AuthService {
   }
 
   Future<void> logout() async {
+    _tempToken = null; // Clear in-memory token
     await _storage.delete(key: 'token');
     await _storage.delete(key: 'refresh');
   }
 
   Future<String?> getToken() async {
+    // Return in-memory token if available (session), otherwise check storage (persistence)
+    if (_tempToken != null) return _tempToken;
     return await _storage.read(key: 'token');
+  }
+
+  Future<String?> getRefreshToken() async {
+    return await _storage.read(key: 'refresh');
+  }
+
+  Future<Map<String, String?>> getSavedCredentials() async {
+    final email = await _storage.read(key: 'saved_email');
+    final password = await _storage.read(key: 'saved_password');
+    return {
+      'email': email,
+      'password': password,
+    };
   }
 
   Future<bool> isAuthenticated() async {
@@ -111,8 +176,9 @@ class AuthService {
       return AuthResponse.fromJson(response.data);
     } on DioException catch (e) {
       if (e.response?.data is Map) {
+        final data = e.response!.data as Map;
         return AuthResponse(
-          error: e.response?.data['error'] ?? 'Failed to send OTP',
+          error: data['error'] ?? data['detail'] ?? 'Failed to send OTP',
         );
       }
       return AuthResponse(error: 'Failed to send OTP: ${e.message}');
@@ -148,8 +214,9 @@ class AuthService {
       return AuthResponse.fromJson(response.data);
     } on DioException catch (e) {
       if (e.response?.data is Map) {
+        final data = e.response!.data as Map;
         return AuthResponse(
-          error: e.response?.data['error'] ?? 'Password reset failed',
+          error: data['error'] ?? data['detail'] ?? 'Password reset failed',
         );
       }
       return AuthResponse(error: 'Password reset failed: ${e.message}');
@@ -164,7 +231,7 @@ class AuthService {
       }
 
       final response = await _dio.get(
-        '$_baseUrl/api/user/',
+        '$_baseUrl/api/me/',
         options: Options(
           headers: {'Authorization': 'Bearer $token'},
         ),
@@ -182,6 +249,10 @@ class AuthService {
     required String name,
     int? age,
     dynamic profileImageFile,
+    String? gamesPlayed,
+    String? competitiveLevel,
+    String? preferredRoles,
+    bool removeProfileImage = false,
   }) async {
     final token = await getToken();
     if (token == null) throw Exception('User not authenticated');
@@ -189,6 +260,11 @@ class AuthService {
     final formData = FormData();
     formData.fields.add(MapEntry('name', name));
     if (age != null) formData.fields.add(MapEntry('age', age.toString()));
+    if (gamesPlayed != null) formData.fields.add(MapEntry('games_played', gamesPlayed));
+    if (competitiveLevel != null) formData.fields.add(MapEntry('competitive_level', competitiveLevel));
+    if (preferredRoles != null) formData.fields.add(MapEntry('preferred_roles', preferredRoles));
+    if (removeProfileImage) formData.fields.add(const MapEntry('remove_profile_image', 'true'));
+    
     if (profileImageFile != null) {
       formData.files.add(MapEntry(
         'profile_image',
@@ -196,25 +272,80 @@ class AuthService {
       ));
     }
 
-    final response = await _dio.patch(
-      '$_baseUrl/api/user/',
-      data: formData,
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'multipart/form-data',
-        },
-      ),
-    );
-    return response.data;
+    try {
+      final response = await _dio.patch(
+        '$_baseUrl/api/me/',
+        data: formData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'multipart/form-data',
+          },
+        ),
+      );
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response?.data is Map) {
+        final data = e.response!.data as Map;
+        // If "error" key exists
+        if (data.containsKey('error')) throw Exception(data['error']);
+        if (data.containsKey('detail')) throw Exception(data['detail']);
+        
+        // If field errors (flatten list of errors)
+        final errors = data.entries.map((e) {
+          final value = e.value;
+          if (value is List) {
+            return "${e.key}: ${value.join(', ')}";
+          }
+          return "${e.key}: $value";
+        }).join('\n');
+        
+        if (errors.isNotEmpty) throw Exception(errors);
+      }
+      throw Exception('Failed to update profile: ${e.message}');
+    }
   }
 
   Future<void> deleteUserProfile() async {
     final token = await getToken();
     if (token == null) throw Exception('User not authenticated');
     await _dio.delete(
-      '$_baseUrl/api/user/',
+      '$_baseUrl/api/me/',
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
   }
-} 
+
+  // Refresh token
+  Future<void> refreshToken() async {
+    try {
+      final refreshToken = await _storage.read(key: 'refresh');
+      if (refreshToken == null) throw Exception('No refresh token found');
+
+      final response = await _dio.post(
+        '$_baseUrl/api/token/refresh/',
+        data: {'refresh': refreshToken},
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final newAccessToken = data['access'] as String;
+        
+        // Update in-memory token
+        _tempToken = newAccessToken;
+
+        // Persist only if refresh token exists in storage (implies Remember Me was true)
+        // Actually, if we found a refresh token in storage, we should update the access token in storage too.
+        if (refreshToken != null) {
+           await _storage.write(key: 'token', value: newAccessToken);
+        }
+      } else {
+        throw Exception('Failed to refresh token');
+      }
+    } on DioException catch (e) {
+      if (e.response?.data is Map) {
+        throw Exception(e.response?.data['error'] ?? 'Failed to refresh token');
+      }
+      throw Exception('Failed to refresh token: ${e.message}');
+    }
+  }
+}
